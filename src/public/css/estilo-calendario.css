@@ -1,0 +1,322 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #000000;
+  color: #ffffff;
+  overflow: hidden;
+  height: 100vh;
+}
+
+.container {
+  background: #000000;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 15px 20px;
+}
+
+/* ============================================ */
+/* CABEÇALHO */
+/* ============================================ */
+.cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #333333;
+  flex-shrink: 0;
+}
+
+.cabecalho h1 {
+  font-size: 22px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navegacao {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.navegacao button {
+  padding: 8px 18px;
+  background: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.navegacao button:hover {
+  background: #cccccc;
+  transform: translateY(-1px);
+}
+
+.navegacao h2 {
+  color: #ffffff;
+  font-size: 22px;
+  min-width: 200px;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+/* ============================================ */
+/* GRADE DO CALENDÁRIO */
+/* ============================================ */
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: 35px repeat(6, 1fr);
+  gap: 1px;
+  background: #333333;
+  border: 1px solid #333333;
+  flex: 1;
+  min-height: 0;
+}
+
+.dia-semana {
+  background: #1a1a1a;
+  color: #ffffff;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dia {
+  background: #000000;
+  padding: 6px;
+  position: relative;
+  overflow-y: auto;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dia.vazio {
+  background: #0a0a0a;
+}
+
+.dia .numero {
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  margin-bottom: 6px;
+  padding: 2px 4px;
+}
+
+.dia.hoje .numero {
+  background: #ffffff;
+  color: #000000;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================ */
+/* POST-ITS */
+/* ============================================ */
+.postit {
+  padding: 5px 7px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  display: block;
+  width: 100%;
+}
+
+.postit:hover {
+  transform: scale(1.03);
+  box-shadow: 2px 2px 6px rgba(255,255,255,0.2);
+  z-index: 10;
+  position: relative;
+}
+
+/* Post-it de FÉRIAS - Amarelo */
+.postit-ferias {
+  background-color: #fde047 !important;
+  color: #000000 !important;
+  border-left: 3px solid #ca8a04 !important;
+}
+
+/* Post-it de VIAGEM - Verde */
+.postit-viagem {
+  background-color: #86efac !important;
+  color: #000000 !important;
+  border-left: 3px solid #16a34a !important;
+}
+
+/* ============================================ */
+/* LEGENDA - GARANTIDA VISÍVEL */
+/* ============================================ */
+.legenda {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-top: 12px;
+  padding: 10px;
+  background: #000000;
+  border-top: 1px solid #333333;
+  font-size: 13px;
+  color: #ffffff;
+  flex-shrink: 0;
+  min-height: 40px;
+}
+
+.item-legenda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.marcador {
+  width: 24px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.marcador.tem-viagem {
+  background: #86efac;
+  border-left: 3px solid #16a34a;
+}
+
+.marcador.tem-ferias {
+  background: #fde047;
+  border-left: 3px solid #ca8a04;
+}
+
+/* ============================================ */
+/* MODAL DE DETALHES */
+/* ============================================ */
+.modal-detalhes {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+}
+
+.modal-detalhes-content {
+  background: #000000;
+  margin: 8% auto;
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(255,255,255,0.1);
+  border: 2px solid #ffffff;
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-detalhes-content h3 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-detalhes-content .info-linha {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 6px;
+  border-left: 3px solid #ffffff;
+}
+
+.modal-detalhes-content .info-linha strong {
+  color: #ffffff;
+  display: inline-block;
+  min-width: 120px;
+}
+
+.modal-detalhes-content .info-linha span {
+  color: #cccccc;
+}
+
+.modal-detalhes-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #ffffff;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-detalhes-close:hover {
+  color: #cccccc;
+}
+
+.modal-detalhes-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-detalhes-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-fechar {
+  background: #ffffff;
+  color: #000000;
+}
+
+.btn-fechar:hover {
+  background: #cccccc;
+}
+
+.btn-ir-para-dia {
+  background: #333333;
+  color: #ffffff;
+  border: 1px solid #ffffff !important;
+}
+
+.btn-ir-para-dia:hover {
+  background: #555555;
+}

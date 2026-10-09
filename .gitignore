@@ -1,0 +1,30 @@
+# Dependências
+node_modules/
+
+# Build/Empacotamento
+dist/
+build/
+
+# Banco de dados (dados reais)
+*.db
+*.sqlite
+
+# Variáveis de ambiente
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+
+# Arquivos temporários
+*.tmp
+*.temp

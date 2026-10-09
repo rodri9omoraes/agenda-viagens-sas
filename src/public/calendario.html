@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendário - Agenda de Viagens</title>
+  <link rel="stylesheet" href="css/estilo-calendario.css">
+</head>
+<body>
+  <div class="container">
+    <div class="cabecalho">
+      <h1>📅 Calendário de Viagens</h1>
+      <div class="navegacao">
+        <button onclick="mudarMes(-1)">◀ Anterior</button>
+        <h2 id="mes-ano"></h2>
+        <button onclick="mudarMes(1)">Próximo ▶</button>
+      </div>
+    </div>
+    
+    <div class="calendario" id="calendario"></div>
+    
+    <div class="legenda">
+      <div class="item-legenda">
+        <span class="marcador tem-viagem"></span>
+        <span>Viagem agendada</span>
+      </div>
+      <div class="item-legenda">
+        <span class="marcador tem-ferias"></span>
+        <span>Motorista de férias</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes -->
+  <div id="modalDetalhes" class="modal-detalhes">
+    <div class="modal-detalhes-content">
+      <span class="modal-detalhes-close" onclick="fecharModalDetalhes()">&times;</span>
+      <h3 id="modal-titulo">Detalhes</h3>
+      <div id="modal-conteudo"></div>
+      <div class="modal-detalhes-actions">
+        <button class="btn-ir-para-dia" id="btn-ir-para-dia" style="display: none;">📅 Ir para este dia</button>
+        <button class="btn-fechar" onclick="fecharModalDetalhes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/calendario.js"></script>
+</body>
+</html>

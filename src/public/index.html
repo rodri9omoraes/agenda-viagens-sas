@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda de Viagens - SAS</title>
+  <link rel="stylesheet" href="css/estilo-caderno.css">
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="caderno-container">
+    <div class="cabecalho-caderno">
+      <h1>📅 Agenda de Viagens - SAS</h1>
+      <div class="data" id="data-atual"></div>
+      <button class="btn-calendario" onclick="window.electronAPI.abrirCalendario()">
+        📆 Ver Calendário do Mês
+      </button>
+      <button class="btn-calendario" onclick="abrirModalFerias()" style="margin-left: 10px;">
+        🏖️ Gerenciar Férias
+      </button>
+    </div>
+
+    <div class="botoes-cadastro">
+      <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
+      <button class="btn btn-secondary" onclick="hardReset()"> Atualizar</button>
+      <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem para Motoristas</button>
+      <input type="date" id="data-selecionada">
+    </div>
+
+    <div class="lista-viagens" id="lista-viagens">
+      <div class="empty-state">
+        <div class="icone">📋</div>
+        <p>Selecione uma data e clique em "Nova Viagem" para começar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Cadastro/Edição -->
+  <div id="modalViagem" class="modal" onclick="fecharModalSeForFundo(event)" tabindex="-1">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal()">&times;</span>
+      <h2 id="titulo-modal">Cadastrar Nova Viagem</h2>
+      
+      <form id="formViagem">
+        <input type="hidden" id="viagem-id">
+        
+        <div class="form-group">
+          <label for="data_viagem">Data da Viagem *</label>
+          <input type="date" id="data_viagem" required>
+        </div>
+
+        <div class="form-group">
+          <label for="quem_autorizou">Quem Autorizou</label>
+          <input type="text" id="quem_autorizou" placeholder="Nome de quem autorizou a viagem">
+        </div>
+
+        <div class="form-group">
+          <label for="nome_pessoa">Nome da Pessoa *</label>
+          <input type="text" id="nome_pessoa" required placeholder="Nome completo da pessoa que vai viajar">
+        </div>
+
+        <div class="form-group">
+          <label for="endereco">Endereço</label>
+          <input type="text" id="endereco" placeholder="Endereço completo">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="telefone1">Celular 1</label>
+            <input type="tel" id="telefone1" placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label for="telefone2">Celular 2</label>
+            <input type="tel" id="telefone2" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cidade_destino">Cidade Destino</label>
+            <input type="text" id="cidade_destino" placeholder="Cidade de destino">
+          </div>
+          <div class="form-group">
+            <label for="local_destino">Local Destino</label>
+            <input type="text" id="local_destino" placeholder="INSS, Hospital, Clínica, etc">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="horario_atendimento">Horário de Atendimento</label>
+            <input type="time" id="horario_atendimento">
+          </div>
+          <div class="form-group">
+            <label for="horario_saida">Horário de Saída</label>
+            <input type="time" id="horario_saida">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" rows="3" placeholder="Informações adicionais..."></textarea>
+        </div>
+
+        <div class="form-group" id="grupo-motorista" style="display: none;">
+          <label for="nome_motorista">Nome do Motorista</label>
+          <input type="text" id="nome_motorista" placeholder="Nome do motorista designado">
+        </div>
+
+        <div class="form-group" id="grupo-status" style="display: none;">
+          <label for="status">Status</label>
+          <select id="status">
+            <option value="agendada">Agendada</option>
+            <option value="realizada">Realizada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-danger" onclick="fecharModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Container oculto para gerar a imagem estilo caderno -->
+  <div id="container-imagem" style="position: absolute; left: -9999px; top: 0;">
+    <div class="imagem-caderno" id="area-imagem-caderno">
+      <div class="caderno-header">
+        <!-- <h2>📅 Agenda de Viagens - SAS</h2> -->
+        <div class="data-caderno" id="data-imagem"></div>
+      </div>
+      <div id="conteudo-imagem"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Férias -->
+  <div id="modalFerias" class="modal" onclick="fecharModalSeForFundo(event)" tabindex="-1">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModalFerias()">&times;</span>
+      <h2>🏖️ Registrar Férias de Motorista</h2>
+      
+      <form id="formFerias">
+        <div class="form-group">
+          <label for="nome_motorista_ferias">Nome do Motorista *</label>
+          <input type="text" id="nome_motorista_ferias" required placeholder="Motorista">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="data_inicio_ferias">Início *</label>
+            <input type="date" id="data_inicio_ferias" required>
+          </div>
+          <div class="form-group">
+            <label for="data_fim_ferias">Fim *</label>
+            <input type="date" id="data_fim_ferias" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="obs_ferias">Observações (Opcional)</label>
+          <input type="text" id="obs_ferias" placeholder="Ex: Férias anuais, licença, etc.">
+        </div>
+
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-danger" onclick="fecharModalFerias()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar Férias</button>
+        </div>
+      </form>
+
+      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #dee2e6;">
+      <h3>Registros Ativos</h3>
+      <div id="lista-ferias" style="max-height: 200px; overflow-y: auto; margin-top: 15px;">
+        <!-- Lista será preenchida via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  
+</body>
+</html>
