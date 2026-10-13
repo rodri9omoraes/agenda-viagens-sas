@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (campoData) campoData.value = hoje;
   if (textoData) textoData.textContent = formatarDataBrasil(hoje);
   
+  carregarFerias();
+
   carregarViagensDia();
 
   if (campoData) {
@@ -107,59 +109,7 @@ async function carregarViagensDia() {
 // ============================================
 // MODAL
 // ============================================
-function abrirModal(idViagem = null) {
-  const modal = document.getElementById('modalViagem');
-  const form = document.getElementById('formViagem');
-  
-  // 1. Resetar o formulário
-  form.reset();
-  
-  // 2. Garantir que todos os campos estejam habilitados
-  const campos = form.querySelectorAll('input, textarea, select');
-  campos.forEach(campo => {
-    campo.disabled = false;
-    campo.readOnly = false;
-    campo.removeAttribute('disabled');
-    campo.removeAttribute('readonly');
-  });
 
-  const tituloModal = document.getElementById('titulo-modal');
-  const grupoMotorista = document.getElementById('grupo-motorista');
-  const grupoStatus = document.getElementById('grupo-status');
-
-  if (idViagem) {
-    tituloModal.textContent = '✏️ Editar Viagem';
-    grupoMotorista.style.display = 'block';
-    grupoStatus.style.display = 'block';
-    buscarViagem(idViagem);
-  } else {
-    tituloModal.textContent = '➕ Cadastrar Nova Viagem';
-    grupoMotorista.style.display = 'none';
-    grupoStatus.style.display = 'none';
-    
-    const dataSelecionada = document.getElementById('data-selecionada');
-    if (dataSelecionada && dataSelecionada.value) {
-      document.getElementById('data_viagem').value = dataSelecionada.value;
-    }
-    document.getElementById('viagem-id').value = '';
-  }
-
-  // 3. Mostrar o modal
-  modal.style.display = 'block';
-
-  // 4. 🔥 TRUQUE DO FOCO NO ELECTRON 🔥
-  // Simula o "acordar" da janela que acontece quando o calendário é fechado
-  setTimeout(() => {
-    const primeiroCampo = document.getElementById('data_viagem');
-    if (primeiroCampo) {
-      // A sequência abaixo é mágica para destravar inputs no Electron
-      primeiroCampo.blur();       // 1. Tira qualquer foco "fantasma"
-      document.body.focus();      // 2. Foca no corpo da página (reseta o estado)
-      primeiroCampo.focus();      // 3. Foca no campo desejado
-      primeiroCampo.click();      // 4. Simula um clique para garantir o cursor
-    }
-  }, 150); // 150ms é o tempo ideal para o Electron processar a exibição do modal
-}
 
 function fecharModal() {
   document.getElementById('modalViagem').style.display = 'none';
@@ -372,11 +322,10 @@ async function gerarImagemDia() {
 }
 
 // ============================================
-// CONTROLE DO MODAL (CORRIGIDO PARA O BUG DE FOCO)
+// CONTROLE DO MODAL (VERSÃO ÚNICA E FINAL)
 // ============================================
 
 function fecharModalSeForFundo(event) {
-  // Só fecha se clicar exatamente no fundo escuro (fora da caixa branca)
   if (event.target.id === 'modalViagem') {
     fecharModal();
   }
@@ -384,10 +333,8 @@ function fecharModalSeForFundo(event) {
 
 function fecharModal() {
   const modal = document.getElementById('modalViagem');
-  // Hack visual para garantir que o overlay pare de interceptar cliques no Electron
   modal.style.display = 'none';
   modal.style.visibility = 'hidden';
-  
   setTimeout(() => {
     modal.style.visibility = 'visible';
   }, 10);
@@ -397,8 +344,10 @@ function abrirModal(idViagem = null) {
   const modal = document.getElementById('modalViagem');
   const form = document.getElementById('formViagem');
   
+  // 1. Resetar o formulário
   form.reset();
   
+  // 2. Garantir que todos os campos estejam habilitados
   const campos = form.querySelectorAll('input, textarea, select');
   campos.forEach(campo => {
     campo.disabled = false;
@@ -424,28 +373,43 @@ function abrirModal(idViagem = null) {
     const dataSelecionada = document.getElementById('data-selecionada');
     if (dataSelecionada && dataSelecionada.value) {
       document.getElementById('data_viagem').value = dataSelecionada.value;
+
+      //Verificar motoristas de férias
+      const motoristasDeFerias = listarMotoristasDeFerias(dataSelecionada.value);
+
+      if (motoristasDeFerias.length > 0) {
+        mostrarAlertaMotoristasFerias(
+          motoristasDeFerias, 
+          formatarDataBrasil(dataSelecionada.value)
+        );
+      }
     }
     document.getElementById('viagem-id').value = '';
   }
 
-  // 1. Mostrar o modal
+  // 3. Mostrar o modal
   modal.style.display = 'block';
 
-  // 2. 🔥 TRUQUE DO FOCO NO ELECTRON 🔥
-  // Chama o processo principal para "acordar" a janela (simula abrir/fechar calendário)
-  if (window.electronAPI && window.electronAPI.forcarFoco) {
-    window.electronAPI.forcarFoco();
-  }
-
-  // 3. Focar no primeiro campo
+  // 4. FOCO NO ELECTRON
+  // Simula o "acordar" da janela que acontece quando o calendário é fechado
   setTimeout(() => {
     const primeiroCampo = document.getElementById('data_viagem');
     if (primeiroCampo) {
-      primeiroCampo.focus();
+      // A sequência abaixo para destravar inputs no Electron
+      primeiroCampo.blur();       // 1. Tira qualquer foco "fantasma"
+      document.body.focus();      // 2. Foca no corpo da página (reseta o estado)
+      primeiroCampo.focus();      // 3. Foca no campo desejado
+      primeiroCampo.click();      // 4. Simula um clique para garantir o cursor
     }
-  }, 150);
+  }, 150); // 150ms é o tempo ideal para o Electron processar a exibição do modal
 }
 
+// Função auxiliar para avisar o calendário para recarregar
+function atualizarCalendarioSeAberto() {
+  if (window.electronAPI && window.electronAPI.atualizarCalendario) {
+    window.electronAPI.atualizarCalendario();
+  }
+}
 
 // ============================================
 // GERENCIAMENTO DE FÉRIAS
@@ -630,9 +594,64 @@ async function carregarViagensDia() {
   }
 }
 
-// Função auxiliar para avisar o calendário para recarregar
-function atualizarCalendarioSeAberto() {
-  if (window.electronAPI && window.electronAPI.atualizarCalendario) {
-    window.electronAPI.atualizarCalendario();
+//Listar TODOS os Motoristas de férias
+function listarMotoristasDeFerias(data) {
+  if (!data || cacheFerias.length === 0) return [];
+
+  const dataSelecionada = new Date(data + 'T00:00:00'); // Converter para data real
+
+  const motoristasDeFerias = cacheFerias
+  .filter(f => {
+    const inicio = new Date(f.data_inicio + 'T00:00:00');
+    const fim = new Date(f.data_fim + 'T00:00:00');
+    return dataSelecionada >= inicio && dataSelecionada <= fim;
+  })
+  .map(f => ({
+    nome: f.nome_motorista,
+    dataFim: f.data_fim
+  }));
+  
+  //Remove duplicatas
+  const nomesUnicos = new Set();
+  return motoristasDeFerias.filter(m => {
+    if (nomesUnicos.has(m.nome)) return false;
+    nomesUnicos.add(m.nome);
+    return true;
+  });
+}
+
+/* =========================================================================== */
+// Modal de alerta personalizado
+
+function mostrarAlertaMotoristasFerias(motoristasDeFerias, dataFormatada) {
+  const modal = document.getElementById('modalAlerta');
+  const titulo = document.getElementById('alerta-titulo');
+  const mensagem = document.getElementById('alerta-mensagem');
+  
+  if (motoristasDeFerias.length === 1) {
+    const m = motoristasDeFerias[0];
+    titulo.textContent = m.nome;
+    mensagem.textContent = `Está de Férias/Folga até ${formatarDataBrasil(m.dataFim)}`;
+  } else {
+    titulo.textContent = 'Motoristas de Férias';
+    let msgHTML = `<strong>Data:</strong> ${dataFormatada}<br><br>`;
+    motoristasDeFerias.forEach((m, index) => {
+      msgHTML += `${index + 1}. <strong>${m.nome}</strong> - até ${formatarDataBrasil(m.dataFim)}<br>`;
+    });
+    mensagem.innerHTML = msgHTML;
+  }
+  
+  modal.style.display = 'block';
+}
+
+function fecharModalAlerta() {
+  document.getElementById('modalAlerta').style.display = 'none';
+}
+
+// Fechar ao clicar fora
+window.onclick = function(event) {
+  const modal = document.getElementById('modalAlerta');
+  if (event.target === modal) {
+    fecharModalAlerta();
   }
 }
