@@ -571,6 +571,8 @@ async function excluirFerias(id) {
   }
 }
 
+// Diz se um motorista está de férias (devolvendo true or false)
+
 
 //*****************************Linha 519******************************************* Parei aqui */
 
