@@ -572,9 +572,157 @@ async function excluirFerias(id) {
 }
 
 // Diz se um motorista está de férias (devolvendo true or false)
+function motoristaEstaDeFerias(nomeMotorista, dataViagem) {
+  //Sem nome de motorista, não há ninguém de férias
+  if (!nomeMotorista) return false;
+  // some() devolve true se algum registro de férias combinar com as condições
+  return cacheFerias.some((f) =>
+    // Compara os nomes ignorando maiusculas/minusculas
+    f.nome_motorista.toLowerCase() === nomeMotorista.toLowerCase() &&
+    // Verifica se a data está entre o início e o fim (datas ISO comparam como o texto)
+    dataViagem >= f.data_inicio && dataViagem <= f.data_fim
+  );
+}
+
+// Lista todos os motoristas que estão de férias em um data (sem repetir nomes)
+function listarMotoristasDeFerias(data) {
+  // Sem data ou sem férias cadastradas, devolve lista vazia
+  if (!data || cacheFerias.length === 0) return [];
+
+  // Converte o texto da data para um objeto de data real
+  const dataSelecionada = new Date(data + 'T00:00:00');
+
+  // Filtra só as férias que incluem a data escolhida
+  const motoristasDeFerias = cacheFerias
+  .filter(f => {
+    const inicio = new Date(f.data_inicio + 'T00:00:00');   // Inicio das Férias
+    const fim = new Date(f.data_fim + 'T00:00:00');   // Fim das Férias
+    return dataSelecionada >= inicio && dataSelecionada <= fim;   // está dentro ?
+  })
+  // Transforma cada registro em um objeto simples com nome e data final
+  .map((f) => ({ nome: f.nome_motorista, dataFim: f.data_fim }));
+  
+  // Set guarda valores únicos: usamos para lembrar quais nomes já apareceram: Remove duplicatas
+  const nomesUnicos = new Set();
+  // Mantém só a primeira ocorrência de cada nome
+  return motoristasDeFerias.filter((m) => {
+    if (nomesUnicos.has(m.nome)) return false;
+    nomesUnicos.add(m.nome);
+    return true;
+  });
+}
+
+// Mostra o Modal de alerta com os motorista de férias (Alerta Personalizado)
+function mostrarAlertaMotoristasFerias(motoristasDeFerias, dataFormatada) {
+  // Pega os elementos do Modal de alerta
+  const modal = document.getElementById('modalAlerta');
+  const titulo = document.getElementById('alerta-titulo');
+  const mensagem = document.getElementById('alerta-mensagem');
+  
+  // Se for só um motorista, mostra uma mensagem direta
+  if (motoristasDeFerias.length === 1) {
+    const m = motoristasDeFerias[0];
+    titulo.textContent = m.nome;
+    mensagem.textContent = `Está de Férias/Folga até ${formatarDataBrasil(m.dataFim)}`;
+  } else {
+    // Se forem vários, mostra uma lista numerada
+    titulo.textContent = 'Motoristas de Férias';
+    let msgHTML = `<strong>Data:</strong> ${dataFormatada}<br><br>`;
+    motoristasDeFerias.forEach((m, index) => {
+      msgHTML += `${index + 1}. <strong>${m.nome}</strong> - até ${formatarDataBrasil(m.dataFim)}<br>`;
+    });
+    mensagem.innerHTML = msgHTML;
+  }
+  
+  // Exibe o Modal de alerta
+  modal.style.display = 'block';
+}
+
+// Fechar o Modal de alerta
+function fecharModalAlerta() {
+  document.getElementById('modalAlerta').style.display = 'none';
+}
+
+// ====================================================================================
+// GERAR IMAGEM DO DIA
+// ====================================================================================
+
+// Gera um arquivo PNG com as viagens do dia selecionado
+async function gerarImagemDia() {
+  // Lê a data selecionada
+  const data = pegarDataSelecionada();
+  
+  try {
+    // Busca as viagens do dia
+    const response = await fetch(`${API_URL}/viagens/data/${data}`);
+    const viagens = await response.json();
+    
+    // Se não há viagens, avisa e para
+    if (viagens.length === 0) {
+      notificar('Não há viagens agendadas para este dia!', 'aviso');
+      return;
+    }
+
+    // Escreve a data no cabeçalho da imagem
+    document.getElementById('data-imagem').textContent = formatarDataBrasil(data);
+    
+    // Preenche o conteúdo da imagem com os cartões (sem botões, sem aviso de férias)
+    const conteudo = document.getElementById('conteudo-imagem');
+    // Layout igual ao da tela principal
+    conteudo.innerHTML = viagens.map(viagem => `
+      <div class="viagem-item ${viagem.status === 'cancelada' ? 'cancelada' : ''}" data-id="${viagem.id}">
+        <div class="viagem-destino-linha">
+          🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
+        </div>
+        <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
+        ${viagem.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${viagem.endereco}</div>` : ''}
+        ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
+        ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
+        ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}
+        ${viagem.nome_motorista ? `<div class="viagem-info"><strong>🚗 Motorista:</strong> ${viagem.nome_motorista}</div>` : ''}
+        ${viagem.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${viagem.quem_autorizou}</div>` : ''}
+      </div>
+    `).join('');
+
+    // Espera 300ms (3s) para o navegador terminar de desenhar antes de fotografar
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Confere se a biblioteca html2canvas (que tira a "foto") foi carregada
+    if (typeof html2canvas === 'undefined') {
+      notificar('❌ Biblioteca html2canvas não carregada.', 'erro');
+      return;
+    }
+
+    // Pega a área que será tranformada em imagem
+    const elemento = document.getElementById('area-imagem-caderno');
+    if (!elemento) {
+      notificar('❌ Elemento de imagem não encontrado.', 'erro');
+      return;
+    }   //****************************************************************** Linha 707 */
+
+    const canvas = await html2canvas(elemento, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+      useCORS: true
+    });
+    
+    const imagem = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `viagens-${data.replace(/-/g, '')}.png`;
+    link.href = imagem;
+    link.click();
+    
+    alert('✅ Imagem gerada com sucesso!');
+    
+  } catch (error) {
+    console.error('Erro ao gerar imagem:', error);
+    alert('❌ Erro ao gerar imagem: ' + error.message);
+  }
+}
 
 
-//*****************************Linha 519******************************************* Parei aqui */
+//*****************************Linha 675******************************************* Parei aqui */
 
 // ====================================================================================
 // INICIALIZAÇÃO
@@ -612,12 +760,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ================================================================
-// MODAL
-/*
-function fecharModal() {
-  document.getElementById('modalViagem').style.display = 'none';
-}*/
 
 //FUNÇAO DE "HARD RESET" - BOtão Atualizar
 async function hardReset() {
@@ -654,89 +796,9 @@ async function hardReset() {
   await carregarViagensDia();  
 }
 
-// ================================================================
-// GERAR IMAGEM
-
-async function gerarImagemDia() {
-  const data = document.getElementById('data-selecionada').value;
-  
-  try {
-    const response = await fetch(`${API_URL}/viagens/data/${data}`);
-    const viagens = await response.json();
-    
-    if (viagens.length === 0) {
-      alert('Não há viagens agendadas para este dia!');
-      return;
-    }
-
-    document.getElementById('data-imagem').textContent = formatarDataBrasil(data);
-    
-    const conteudo = document.getElementById('conteudo-imagem');
-    // Layout igual ao da tela principal
-    conteudo.innerHTML = viagens.map(viagem => `
-      <div class="viagem-item ${viagem.status === 'cancelada' ? 'cancelada' : ''}" data-id="${viagem.id}">
-        <div class="viagem-destino-linha">
-          🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
-        </div>
-        <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
-        ${viagem.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${viagem.endereco}</div>` : ''}
-        ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
-        ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
-        ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}
-        ${viagem.nome_motorista ? `<div class="viagem-info"><strong>🚗 Motorista:</strong> ${viagem.nome_motorista}</div>` : ''}
-        ${viagem.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${viagem.quem_autorizou}</div>` : ''}
-      </div>
-    `).join('');
-
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    if (typeof html2canvas === 'undefined') {
-      alert('❌ Biblioteca html2canvas não carregada.');
-      return;
-    }
-
-    const elemento = document.getElementById('area-imagem-caderno');
-    if (!elemento) {
-      alert('❌ Elemento de imagem não encontrado.');
-      return;
-    }
-
-    const canvas = await html2canvas(elemento, {
-      scale: 2,
-      backgroundColor: '#ffffff',
-      logging: false,
-      useCORS: true
-    });
-    
-    const imagem = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `viagens-${data.replace(/-/g, '')}.png`;
-    link.href = imagem;
-    link.click();
-    
-    alert('✅ Imagem gerada com sucesso!');
-    
-  } catch (error) {
-    console.error('Erro ao gerar imagem:', error);
-    alert('❌ Erro ao gerar imagem: ' + error.message);
-  }
-}
-
 
 // ================================================================
 // GERENCIAMENTO DE FÉRIAS
-
-
-
-// Função para avisar se o motorista da viagem está de férias
-async function verificarFeriasMotorista(nomeMotorista, dataViagem) {
-  if (!nomeMotorista) return false;
-  const emFerias = cacheFerias.some(f => 
-    f.nome_motorista.toLowerCase() === nomeMotorista.toLowerCase() &&
-    dataViagem >= f.data_inicio && dataViagem <= f.data_fim
-  );
-  return emFerias;
-}
 
 // Atualiza a função carregarViagensDia para incluir o aviso
 async function carregarViagensDia() {
@@ -798,60 +860,6 @@ async function carregarViagensDia() {
     console.error('Erro ao carregar viagens:', error);
     listaViagens.innerHTML = `<div class="empty-state" style="color: red;"><p>Erro ao carregar: ${error.message}</p></div>`;
   }
-}
-
-//Listar TODOS os Motoristas de férias
-function listarMotoristasDeFerias(data) {
-  if (!data || cacheFerias.length === 0) return [];
-
-  const dataSelecionada = new Date(data + 'T00:00:00'); // Converter para data real
-
-  const motoristasDeFerias = cacheFerias
-  .filter(f => {
-    const inicio = new Date(f.data_inicio + 'T00:00:00');
-    const fim = new Date(f.data_fim + 'T00:00:00');
-    return dataSelecionada >= inicio && dataSelecionada <= fim;
-  })
-  .map(f => ({
-    nome: f.nome_motorista,
-    dataFim: f.data_fim
-  }));
-  
-  //Remove duplicatas
-  const nomesUnicos = new Set();
-  return motoristasDeFerias.filter(m => {
-    if (nomesUnicos.has(m.nome)) return false;
-    nomesUnicos.add(m.nome);
-    return true;
-  });
-}
-
-/* =========================================================================== */
-// Modal de alerta personalizado
-
-function mostrarAlertaMotoristasFerias(motoristasDeFerias, dataFormatada) {
-  const modal = document.getElementById('modalAlerta');
-  const titulo = document.getElementById('alerta-titulo');
-  const mensagem = document.getElementById('alerta-mensagem');
-  
-  if (motoristasDeFerias.length === 1) {
-    const m = motoristasDeFerias[0];
-    titulo.textContent = m.nome;
-    mensagem.textContent = `Está de Férias/Folga até ${formatarDataBrasil(m.dataFim)}`;
-  } else {
-    titulo.textContent = 'Motoristas de Férias';
-    let msgHTML = `<strong>Data:</strong> ${dataFormatada}<br><br>`;
-    motoristasDeFerias.forEach((m, index) => {
-      msgHTML += `${index + 1}. <strong>${m.nome}</strong> - até ${formatarDataBrasil(m.dataFim)}<br>`;
-    });
-    mensagem.innerHTML = msgHTML;
-  }
-  
-  modal.style.display = 'block';
-}
-
-function fecharModalAlerta() {
-  document.getElementById('modalAlerta').style.display = 'none';
 }
 
 // Fechar ao clicar fora
