@@ -35,26 +35,46 @@ function formatarHora(hora) {
   return hora;
 }
 
-// Mostra uma mensagem rápida no canto da tela
+// Mostra uma mensagem no Modal Personaliza
 // Tipo pode ser 'Sucesso', 'Erro' ou 'Aviso'
 function notificar(mensagem, tipo ='sucesso'){
-  // Cores diferentes para cada tipo de mensagem
-  const cores = { sucesso: '#28a745', erro: '#dc3545', aviso: '#fd7e14' };
-  // Cria um elemento <div> novo (solto, fora da página)
-  const aviso = document.createElement('div');
-  // Define o texto que vai aparecer dentro do aviso
-  aviso.textContent = mensagem;
-  // Define o estilo: posição fixa no canto superior direito, cor, tamanho...
-  aviso.style.cssText = `
-    position: fixed; top: 20px; right: 20px; z-index: 99999;
-    padding: 12px 18px; border-radius: 8px; color: #fff;
-    font-size: 15px; font-weight: bold; max-width: 340px;
-    box-shadow: ${cores[tipo] || cores.sucesso};
-  `;
-  // Coloca o aviso dentro da página
-  document.body.appendChild(aviso);
+  const modal = document.getElementById('modalAlerta');
+  const iconCircle = document.getElementById('alerta-icon-circle');
+  const iconText = document.getElementById('alerta-exclamacao');
+  const titulo = document.getElementById('alerta-titulo');
+  const msgElement = document.getElementById('alerta-mensagem');
+
+  // Reseta estilos anteriores
+  iconCircle.style.borderColor = '';
+  iconCircle.style.background = '';
+  iconText.style.color = '';
+
+  // Define o visual baseado no tipo
+  if (tipo === 'sucesso') {
+    titulo.textContent = '';
+    iconCircle.style.borderColor = '#28a745';
+    iconCircle.style.background = '#e6f9ed';
+    iconText.textContent = '✓';
+    iconText.style.color = '#28a745';
+  } else if (tipo === 'erro') {
+    titulo.textContent = '';
+    iconCircle.style.borderColor = '#dc3545';
+    iconCircle.style.background = '#fde8e8';
+    iconText.textContent = '✕';
+    iconText.style.color = '#dc3545';
+  } else {
+    titulo.textContent = '';
+    iconCircle.style.borderColor = '#fd7e14';
+    iconCircle.style.background = '#fff4e6';
+    iconText.textContent = '!';
+    iconText.style.color = '#fd7e14';
+  }
+
+  msgElement.textContent = mensagem;
+  modal.style.display = 'block';
+
   // Remove o aviso depois de 3s (3000 ms)
-  setTimeout(() => { aviso.remove(); }, 3000);
+  setTimeout(() => { notificar.remove(); }, 3000);
 }
 
 // Mostra uma caixa "Sim/Não" dentro da página
@@ -73,9 +93,9 @@ function confirmar(mensagem) {
     // * as aspas especiais ` permitem escrever o HTML em várias linhas
     fundo.innerHTML = `
       <div style="background: #fff; padding: 24px; border-radius: 10px; max-width: 360px; text-align: center;">
-        <p style="margin: 0 0 18px; font-size: 16px;></p>
+        <p style="margin: 0 0 18px; font-size: 16px;"></p>
         <button class="btn btn-danger" data-resposta="sim">Sim</button>
-        <button class="btn btn-secondary" data-resposta="nao"><Não</button>
+        <button class="btn btn-secondary" data-resposta="nao">Não</button>
       </div>
     `;
     // Coloca a pergunta com textContent (* para textos é melhor que innerHTML)
@@ -156,7 +176,7 @@ function montarCardViagem(viagem, opcoes = {}){
 
 async function carregarViagensDia() {
   // Pega a data selecionada
-  const data = pegarDataSelecionada;
+  const data = pegarDataSelecionada();
   // Pega a área da tela onde a lista é inserida
   const listaViagens = document.getElementById('lista-viagens');
 
@@ -192,12 +212,11 @@ async function carregarViagensDia() {
     const html = viagens.map((viagem) => {
       // Inicia sem nenhum aviso
       let avisoFerias = '';
-      // Se a viagem tem motorista e ele está de férias nessa data, cria o aviso
-      if (viagem.nome_motorista && motoristaEstaDeFerias(viagem.nome_motorista, data)){
-        avisoFerias = `
-        <div style="background:#fff3cd; color:#856404; padding:8px; border-radius:6px; margin-top:10px; font-size:14px; font-weight:bold;">
+      // Lógica para verificar se o motorista está de férias
+      if (viagem.nome_motorista && motoristaEstaDeFerias(viagem.nome_motorista, data)) {
+        avisoFerias = `<div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 14px; font-weight: bold;">
             ⚠️ ATENÇÃO: ${viagem.nome_motorista} está de FÉRIAS neste período!
-        </div>`;
+          </div>`;
       }
       // Devolve o card pronto, com os botões de editar/cancelar
       return montarCardViagem(viagem, { comAcoes: true, avisoFerias });
@@ -290,7 +309,7 @@ async function salvarViagem(e) {
       // Primeiro fecha o MODAL
       fecharModal();
       // Mostra o AVISO de sucesso (sem travar com o alert)
-      notificar('✅ ' + result.message, 'sucesso');
+      notificar(result.message, 'sucesso');
       // Recarrega a lista de viagens do dia
       carregarViagensDia();
       // Avisa o calendário para se atualizar
@@ -298,12 +317,12 @@ async function salvarViagem(e) {
 
     } else {
       // Se o servidor recusou, mostra o motivo
-      notificar('❌ Erro: ' + (result.error || result.message), 'erro');
+      notificar((result.error || result.message), 'erro');
     }
 
   } catch (error) {
     // Se nem chegou no servidor
-    notificar('❌ Erro de conexão.', 'erro');
+    notificar('erro');
   }
 }
 
@@ -339,7 +358,7 @@ async function cancelarViagem(id) {
 
     //Se deu certo
     if (response.ok) {
-      notificar('✅ ' + result.message, 'sucesso');
+      notificar(result.message, 'sucesso');
     } else {
       // Registra o problema no console e avisa o usuário
       console.warn('Servidor retornou erro, mas pode ter deletado:', result);
@@ -354,7 +373,7 @@ async function cancelarViagem(id) {
     // Registra o erro de rede no console 
     console.error('Erro de rede:', error);
     // Avisa o usuário
-    notificar('❌ Erro de conexão com o servidor.', 'erro');
+    notificar('erro');
   }
 }
 
@@ -536,18 +555,18 @@ async function salvarFerias(e){
     if (response.ok) {
       fecharModalFerias();
       document.getElementById('formFerias').reset();
-      notificar('✅ ' + result.message, 'sucesso');
+      notificar(result.message, 'sucesso');
       await carregarViagensDia();   // Recarrega (isso também recarrega as férias)
       atualizarCalendarioSeAberto();
       
     } else {
       // Se o servidor recusou, mostra o motivo
-      notificar('❌ Erro ao salvar: ' + (result.error || 'Verifique os dados'), 'erro');
+      notificar((result.error || 'Verifique os dados'), 'erro');
     }
   } catch (error) {
     // Erro de Rede
     console.error('Erro de rede:', error);
-    notificar('❌ Erro de conexão ao salvar férias.', 'erro');
+    notificar('Erro de conexão ao salvar férias.', 'erro');
   }
 }
 
@@ -556,7 +575,7 @@ async function excluirFerias(id) {
   // Pergunta se tem certeza 
   const confirmou = await confirmar('Remover este registro de férias?');
   // Se responder "Não", para aqui
-  if (!confirm) return;
+  if (!confirmou) return;
 
   try {
     // Pede ao servidor para apagar
@@ -567,7 +586,7 @@ async function excluirFerias(id) {
       atualizarCalendarioSeAberto();
     }
   } catch (error) {
-    notificar('❌ Erro ao excluir.', 'erro');
+    notificar('Erro ao excluir.', 'erro');
   }
 }
 
@@ -698,8 +717,9 @@ async function gerarImagemDia() {
     if (!elemento) {
       notificar('❌ Elemento de imagem não encontrado.', 'erro');
       return;
-    }   //****************************************************************** Linha 707 */
+    }
 
+    // Tira o "print" da área (Scale 2 = o dobro da qualidade)
     const canvas = await html2canvas(elemento, {
       scale: 2,
       backgroundColor: '#ffffff',
@@ -707,84 +727,44 @@ async function gerarImagemDia() {
       useCORS: true
     });
     
+    // Converter a foto para um endereço de imagem PNG
     const imagem = canvas.toDataURL('image/png');
+    // Cria um link invisível para baixar o arquivo
     const link = document.createElement('a');
+    // Nome do arquivo: viagens-20261014.png (removeos "-" da data)
     link.download = `viagens-${data.replace(/-/g, '')}.png`;
+    // Endereço do arquivo
     link.href = imagem;
+    // "Crica" no link para iniciar o download
     link.click();
     
-    alert('✅ Imagem gerada com sucesso!');
+    // Avisa que deu certo
+    notificar('Imagem gerada com sucesso!', 'sucesso');
     
   } catch (error) {
+    // Registra e mostra o erro
     console.error('Erro ao gerar imagem:', error);
-    alert('❌ Erro ao gerar imagem: ' + error.message);
+    notificar('Erro ao gerar imagem: ' + error.message, 'erro');
   }
 }
 
-
-//*****************************Linha 675******************************************* Parei aqui */
-
 // ====================================================================================
-// INICIALIZAÇÃO
+// ATUALIZAR (HARD RESET) - botão "Atualizar"
+// ====================================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('App carregado!');
-  
-  const hoje = new Date().toISOString().split('T')[0];
-  const campoData = document.getElementById('data-selecionada');
-  const textoData = document.getElementById('data-atual');
-  
-  if (campoData) campoData.value = hoje;
-  if (textoData) textoData.textContent = formatarDataBrasil(hoje);
-  
-  carregarFerias();
-
-  carregarViagensDia();
-
-  if (campoData) {
-    campoData.addEventListener('change', (e) => {
-      if (textoData) textoData.textContent = formatarDataBrasil(e.target.value);
-      carregarViagensDia();
-    });
-  }
-
-  const form = document.getElementById('formViagem');
-  if (form) form.addEventListener('submit', salvarViagem);
-
-  if (window.electronAPI && window.electronAPI.onDataSelecionada) {
-    window.electronAPI.onDataSelecionada((data) => {
-      if (campoData) campoData.value = data;
-      if (textoData) textoData.textContent = formatarDataBrasil(data);
-      carregarViagensDia();
-    });
-  }
-});
-
-
-//FUNÇAO DE "HARD RESET" - BOtão Atualizar
+// Fechar o Modal, limpa o formulário e recarrega a lista
 async function hardReset() {
   console.log('🔄 Executando hard reset...');
 
+  // Pega a lista, o formulário e o Modal
   const listaViagens = document.getElementById('lista-viagens');
   const form = document.getElementById('formViagem');
-  const modal = document.getElementById('modalViagem');
+  
+  //Fechar modal de viagem, se estiver aberto
+  fecharModal();
 
-  //Fechar modal se estiver aberto
-  if (modal) {
-    modal.style.display = 'none';
-  }
-
-  if (form) {
-    form.reset();
-    const campos = form.querySelectorAll('input, textarea, select');
-    campos .forEach(campo => {
-      campo.disabled = false;
-      campo.readOnly = false;
-      campo.removeAttribute('disabled');
-      campo.removeAttribute('readonly');
-      campo.style.pointerEvents = 'auto';
-    });
-  }
+  // Limpa o formulário, se existir
+  if (form) form.reset();
 
   //Mostra o estado do carregamento
   listaViagens.innerHTML = '<div class="empty-state"><div class="icone">🔄</div><p>Atualizando lista...</p></div>';
@@ -796,76 +776,61 @@ async function hardReset() {
   await carregarViagensDia();  
 }
 
+// ====================================================================================
+// INICIALIZAÇÃO
+// ====================================================================================
 
-// ================================================================
-// GERENCIAMENTO DE FÉRIAS
-
-// Atualiza a função carregarViagensDia para incluir o aviso
-async function carregarViagensDia() {
-  const data = document.getElementById('data-selecionada').value;
-  const listaViagens = document.getElementById('lista-viagens');
+// DOMContentLoaded dispara quando o HTML terminou de carregar.
+// Liga tudo: data de hoje, eventos...
+document.addEventListener('DOMContentLoaded', () => {
+  // Mensagem no console para confirmar que o script rodou
+  console.log('App carregado!');
   
-  await carregarFerias(); // Garante que temos as férias em memória
+  // Pega a data de hoje no formato "AAAA-MM-DD"
+  const hoje = new Date().toISOString().split('T')[0];
 
-  if (!data) {
-    listaViagens.innerHTML = `<div class="empty-state"><div class="icone">📋</div><p>Selecione uma data</p></div>`;
-    return;
-  }
+  // Pega o campo de data e coloca a data de hoje nele
+  const campoData = document.getElementById('data-selecionada');
   
-  try {
-    const response = await fetch(`${API_URL}/viagens/data/${data}`);
-    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-    const viagens = await response.json();
-    
-    if (viagens.length === 0) {
-      listaViagens.innerHTML = `<div class="empty-state"><div class="icone">📭</div><p>Nenhuma viagem agendada para ${formatarDataBrasil(data)}</p></div>`;
-      return;
-    }
+  if (campoData) campoData.value = hoje;
 
-    // Monta o HTML verificando férias
-    const htmlViagens = await Promise.all(viagens.map(async (viagem) => {
-      let avisoFerias = '';
-      if (viagem.nome_motorista) {
-        const estaDeFerias = await verificarFeriasMotorista(viagem.nome_motorista, data);
-        if (estaDeFerias) {
-          avisoFerias = `<div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 14px; font-weight: bold;">
-            ⚠️ ATENÇÃO: ${viagem.nome_motorista} está de FÉRIAS neste período!
-          </div>`;
-        }
-      }
+  // Atualiza o texto grande com a data de hoje
+  atualizarTextoData(hoje);
 
-      return `
-      <div class="viagem-item ${viagem.status === 'cancelada' ? 'cancelada' : ''}" data-id="${viagem.id}">
-        <div class="viagem-destino-linha">
-          🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
-        </div>
-        <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
-        ${viagem.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${viagem.endereco}</div>` : ''}
-        ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
-        ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
-        ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}
-        ${viagem.nome_motorista ? `<div class="viagem-info"><strong>🚗 Motorista:</strong> ${viagem.nome_motorista}</div>` : ''}
-        ${viagem.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${viagem.quem_autorizou}</div>` : ''}
-        ${avisoFerias} <!-- AVISO DE FÉRIAS AQUI -->
-        <div class="viagem-acoes">
-          <button class="btn btn-secondary" onclick="editarViagem(${viagem.id})">✏️ Editar</button>
-          ${viagem.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarViagem(${viagem.id})">❌ Cancelar</button>` : ''}
-        </div>
-      </div>`;
-    }));
+  // Carregar as viagens do dia, e também as férias
+  carregarViagensDia();
 
-    listaViagens.innerHTML = htmlViagens.join('');
-    
-  } catch (error) {
-    console.error('Erro ao carregar viagens:', error);
-    listaViagens.innerHTML = `<div class="empty-state" style="color: red;"><p>Erro ao carregar: ${error.message}</p></div>`;
+  // Quando o usuário trocar a data no campo...
+  if (campoData) {
+    campoData.addEventListener('change', (e) => {
+      atualizarTextoData(e.target.value); // Atualiza o texto da data
+      carregarViagensDia();
+    });
   }
-}
 
-// Fechar ao clicar fora
-window.onclick = function(event) {
-  const modal = document.getElementById('modalAlerta');
-  if (event.target === modal) {
-    fecharModalAlerta();
+  // Liga o envio do formulário de viagem à função salvarViagem
+  const formViagem = document.getElementById('formViagem');
+  if (formViagem) formViagem.addEventListener('submit', salvarViagem);
+
+  // Liga o envio do formulário de férias à função salvarFerias
+  const formFerias = document.getElementById('formFerias');
+  if (formFerias) formFerias.addEventListener('submit', salvarFerias);
+
+  // Quando o calendário (outra janela) escolher uma data, o Electron nos avisa
+  if (window.electronAPI && window.electronAPI.onDataSelecionada) {
+    window.electronAPI.onDataSelecionada((data) => {
+      if (campoData) campoData.value = data;  // Coloca a data no campo
+      atualizarTextoData(data); // Atualiza o texto
+      carregarViagensDia();
+    });
   }
-}
+
+  // Fechar o Modal de alerta ao clicar fora
+  const modalAlerta = document.getElementById('modalAlerta');
+  if (modalAlerta) {
+    modalAlerta.addEventListener('click', (event) => {
+      // Só fecha se o clique foi fora
+      if (event.target === modalAlerta) fecharModalAlerta();
+    });
+  }
+});

@@ -113,20 +113,20 @@ function startServer() {
   expressApp.put('/api/viagens/:id', (req, res) => {
     try {
       const {
-        quem_autorizou, nome_pessoa, endereco,
+        data_viagem, quem_autorizou, nome_pessoa, endereco,
         telefone1, telefone2, cidade_destino, local_destino,
         horario_atendimento, horario_saida, observacoes, nome_motorista, status
       } = req.body;
 
       db.run(`
         UPDATE viagens SET
-          quem_autorizou = ?, nome_pessoa = ?, endereco = ?,
+          data_viagem = ?, quem_autorizou = ?, nome_pessoa = ?, endereco = ?,
           telefone1 = ?, telefone2 = ?, cidade_destino = ?, local_destino = ?,
           horario_atendimento = ?, horario_saida = ?, observacoes = ?,
           nome_motorista = ?, status = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `, [
-        quem_autorizou, nome_pessoa, endereco,
+        data_viagem, quem_autorizou, nome_pessoa, endereco,
         telefone1, telefone2, cidade_destino, local_destino,
         horario_atendimento, horario_saida, observacoes,
         nome_motorista, status, parseInt(req.params.id)
