@@ -21,7 +21,7 @@ body {
 }
 
 .cabecalho-caderno {
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: linear-gradient(135deg, #1e3a5f 80%, #2d5a87 20%);
   padding: 25px 30px;
   color: white;
 }
@@ -646,4 +646,124 @@ body {
   }
 }
 
-/* =========================================================================== */
+
+/* ============================================ */
+/* SISTEMA DE ABAS */
+/* ============================================ */
+
+.abas-navegacao {
+  background: linear-gradient(135deg, #1e3a5f 90%, #2d5a87 10%);
+  padding: 0 20px;
+  display: flex;
+  gap: 5px;
+  border-bottom: 3px solid #0f3460;
+}
+
+.aba-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 8px 8px 0 0;
+  margin-top: 10px;
+}
+
+.aba-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.aba-btn.ativa {
+  background: #fff;
+  color: #1e3a5f;
+}
+
+.aba-conteudo {
+  display: none;
+}
+
+.aba-conteudo.ativa {
+  display: block;
+}
+
+/* ============================================ */
+/* RELATÓRIOS */
+/* ============================================ */
+
+.cabecalho-relatorios {
+  background: linear-gradient(135deg, #1e3a5f 80%, #2d5a87 20%);
+  color: white;
+  padding: 30px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cabecalho-relatorios h1 {
+  font-size: 28px;
+  margin: 0;
+}
+
+.grid-relatorios {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 30px 40px;
+}
+
+.card-relatorio {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.card-relatorio:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.card-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.card-relatorio h3 {
+  color: #1e3a5f;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.card-numero {
+  font-size: 48px;
+  font-weight: 800;
+  color: #28a745;
+  margin: 10px 0;
+}
+
+.card-desc {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+}
+
+.grafico-card {
+  grid-column: span 2;
+  height: 400px;
+  position: relative;
+}
+
+/* Responsivo */
+@media (max-width: 1024px) {
+  .grid-relatorios {
+    grid-template-columns: 1fr;
+  }
+
+  .grafico-card {
+    grid-column: span 1;
+  }
+}

@@ -5,37 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda de Viagens - SAS</title>
   <link rel="stylesheet" href="css/estilo-caderno.css">
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="caderno-container">
-    <div class="cabecalho-caderno">
-      <h1>📅 Agenda de Viagens - SAS</h1>
-      <div class="data" id="data-atual"></div>
-      <button class="btn-calendario" onclick="window.electronAPI.abrirCalendario()">
-        📆 Ver Calendário do Mês
-      </button>
-      <button class="btn-calendario" onclick="abrirModalFerias()" style="margin-left: 10px;">
-        🏖️ Gerenciar Férias
-      </button>
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <div class="abas-navegacao">
+      <button class="aba-btn ativa" onclick="trocarAba('geral')">📋 Geral</button>
+      <button class="aba-btn" onclick="trocarAba('relatorios')"> Relatórios</button>
     </div>
 
-    <div class="botoes-cadastro">
-      <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
-      <button class="btn btn-secondary" onclick="hardReset()"> Atualizar</button>
-      <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem para Motoristas</button>
-      <input type="date" id="data-selecionada">
+    <!-- ABA GERAL (conteúdo atual) -->
+    <div id="aba-geral" class="aba-conteudo ativa">
+      <div class="cabecalho-caderno">
+        <h1>📅 Agenda de Viagens - SAS</h1>
+        <div class="data" id="data-atual"></div>
+        <button class="btn-calendario" onclick="window.electronAPI.abrirCalendario()">
+          📆 Ver Calendário do Mês
+        </button>
+        <button class="btn-calendario" onclick="abrirModalFerias()" style="margin-left: 10px;">
+          🏖️ Gerenciar Férias
+        </button>
+      </div>
+
+      <div class="botoes-cadastro">
+        <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
+        <button class="btn btn-secondary" onclick="hardReset()">🔄 Atualizar</button>
+        <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem</button>
+        <input type="date" id="data-selecionada">
+      </div>
+
+      <div class="lista-viagens" id="lista-viagens">
+        <div class="empty-state">
+          <div class="icone">📋</div>
+          <p>Selecione uma data e clique em "Nova Viagem" para começar</p>
+        </div>
+      </div>
     </div>
 
-    <div class="lista-viagens" id="lista-viagens">
-      <div class="empty-state">
-        <div class="icone">📋</div>
-        <p>Selecione uma data e clique em "Nova Viagem" para começar</p>
+    <!-- ABA RELATÓRIOS -->
+    <div id="aba-relatorios" class="aba-conteudo">
+      <div class="cabecalho-relatorios">
+        <h1>📊 Relatórios e Estatísticas</h1>
+        <button class="btn btn-secondary" onclick="atualizarRelatorios()">🔄 Atualizar Dados</button>
+      </div>
+
+      <!-- CARDS SUPERIORES -->
+      <div class="grid-relatorios">
+        <div class="card-relatorio">
+          <div class="card-icon">✅</div>
+          <h3>Viagens Realizadas</h3>
+          <p class="card-numero" id="total-realizadas">0</p>
+          <p class="card-desc">No ano de <span id="ano-atual"></span></p>
+        </div>
+
+        <div class="card-relatorio">
+          <div class="card-icon">📅</div>
+          <h3>Viagens a Realizar</h3>
+          <p class="card-numero" id="total-pendentes">0</p>
+          <p class="card-desc">Agendadas</p>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS -->
+      <div class="grid-relatorios">
+        <div class="card-relatorio grafico-card">
+          <h3>🚗 Viagens por Motorista</h3>
+          <canvas id="grafico-motoristas"></canvas>
+        </div>
+
+        <div class="card-relatorio grafico-card">
+          <h3>🏙️ Viagens por Destino</h3>
+          <canvas id="grafico-destinos"></canvas>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal de Cadastro/Edição -->
+  <!-- MODAIS (mantenha todos os modais que já tem aqui) -->
+  <!-- Modal de Viagem -->
   <div id="modalViagem" class="modal" onclick="fecharModalSeForFundo(event)" tabindex="-1">
     <div class="modal-content">
       <span class="close" onclick="fecharModal()">&times;</span>
@@ -51,12 +99,12 @@
 
         <div class="form-group">
           <label for="quem_autorizou">Quem Autorizou</label>
-          <input type="text" id="quem_autorizou" placeholder="Nome de quem autorizou a viagem">
+          <input type="text" id="quem_autorizou" placeholder="Nome de quem autorizou">
         </div>
 
         <div class="form-group">
           <label for="nome_pessoa">Nome da Pessoa *</label>
-          <input type="text" id="nome_pessoa" required placeholder="Nome completo da pessoa que vai viajar">
+          <input type="text" id="nome_pessoa" required placeholder="Nome completo">
         </div>
 
         <div class="form-group">
@@ -78,21 +126,21 @@
         <div class="form-row">
           <div class="form-group">
             <label for="cidade_destino">Cidade Destino</label>
-            <input type="text" id="cidade_destino" placeholder="Cidade de destino">
+            <input type="text" id="cidade_destino" placeholder="Cidade">
           </div>
           <div class="form-group">
             <label for="local_destino">Local Destino</label>
-            <input type="text" id="local_destino" placeholder="INSS, Hospital, Clínica, etc">
+            <input type="text" id="local_destino" placeholder="INSS, Hospital...">
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="horario_atendimento">Horário de Atendimento</label>
+            <label for="horario_atendimento">Horário Atendimento</label>
             <input type="time" id="horario_atendimento">
           </div>
           <div class="form-group">
-            <label for="horario_saida">Horário de Saída</label>
+            <label for="horario_saida">Horário Saída</label>
             <input type="time" id="horario_saida">
           </div>
         </div>
@@ -104,7 +152,7 @@
 
         <div class="form-group" id="grupo-motorista" style="display: none;">
           <label for="nome_motorista">Nome do Motorista</label>
-          <input type="text" id="nome_motorista" placeholder="Nome do motorista designado">
+          <input type="text" id="nome_motorista" placeholder="Motorista designado">
         </div>
 
         <div class="form-group" id="grupo-status" style="display: none;">
@@ -121,17 +169,6 @@
           <button type="submit" class="btn btn-primary">💾 Salvar</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- Container oculto para gerar a imagem estilo caderno -->
-  <div id="container-imagem" style="position: absolute; left: -9999px; top: 0;">
-    <div class="imagem-caderno" id="area-imagem-caderno">
-      <div class="caderno-header">
-        <!-- <h2>📅 Agenda de Viagens - SAS</h2> -->
-        <div class="data-caderno" id="data-imagem"></div>
-      </div>
-      <div id="conteudo-imagem"></div>
     </div>
   </div>
 
@@ -159,8 +196,8 @@
         </div>
 
         <div class="form-group">
-          <label for="obs_ferias">Observações (Opcional)</label>
-          <input type="text" id="obs_ferias" placeholder="Ex: Férias anuais, licença, etc.">
+          <label for="obs_ferias">Observações</label>
+          <input type="text" id="obs_ferias" placeholder="Ex: Férias anuais">
         </div>
 
         <div class="modal-acoes">
@@ -171,25 +208,32 @@
 
       <hr style="margin: 25px 0; border: 0; border-top: 1px solid #dee2e6;">
       <h3>Registros Ativos</h3>
-      <div id="lista-ferias" style="max-height: 200px; overflow-y: auto; margin-top: 15px;">
-        <!-- Lista será preenchida via JS -->
-      </div>
+      <div id="lista-ferias" style="max-height: 200px; overflow-y: auto; margin-top: 15px;"></div>
     </div>
   </div>
 
-  <!-- Modal de Alerta  -->
-<div id="modalAlerta" class="modal-alerta-custom" style="display: none;">
-  <div class="modal-alerta-box">
-    <div class="alerta-icon-circle" id="alerta-icon-circle">
-      <span class="alerta-exclamacao" id="alerta-exclamacao">!</span>
+  <!-- Modal de Alerta -->
+  <div id="modalAlerta" class="modal-alerta-custom" style="display: none;">
+    <div class="modal-alerta-box">
+      <div class="alerta-icon-circle" id="alerta-icon-circle">
+        <span class="alerta-exclamacao" id="alerta-exclamacao">!</span>
+      </div>
+      <h3 id="alerta-titulo" class="alerta-titulo"></h3>
+      <p id="alerta-mensagem" class="alerta-mensagem"></p>
+      <button class="btn-alerta-ok-unico" onclick="fecharModalAlerta()">OK</button>
     </div>
-    <h3 id="alerta-titulo" class="alerta-titulo"></h3>
-    <p id="alerta-mensagem" class="alerta-mensagem"></p>
-    <button class="btn-alerta-ok-unico" onclick="fecharModalAlerta()">OK</button>
   </div>
-</div>
+
+  <!-- Container para gerar imagem -->
+  <div id="container-imagem" style="position: absolute; left: -9999px; top: 0;">
+    <div class="imagem-caderno" id="area-imagem-caderno">
+      <div class="caderno-header">
+        <div class="data-caderno" id="data-imagem"></div>
+      </div>
+      <div id="conteudo-imagem"></div>
+    </div>
+  </div>
 
   <script src="js/app.js"></script>
-  
 </body>
 </html>

@@ -72,9 +72,6 @@ function notificar(mensagem, tipo ='sucesso'){
 
   msgElement.textContent = mensagem;
   modal.style.display = 'block';
-
-  // Remove o aviso depois de 3s (3000 ms)
-  setTimeout(() => { notificar.remove(); }, 3000);
 }
 
 // Mostra uma caixa "Sim/Não" dentro da página
@@ -777,13 +774,214 @@ async function hardReset() {
 }
 
 // ====================================================================================
+// SISTEMA DE ABAS E RELATÓRIOS
+// ====================================================================================
+
+// Troca entre as abas
+function trocarAba(abaNome) {
+  // Remove classe ativa de todas as abas e conteúdos
+  document.querySelectorAll('.aba-btn').forEach(btn => btn.classList.remove('ativa'));
+  document.querySelectorAll('.aba-conteudo').forEach(conteudo => conteudo.classList.remove('ativa'));
+  
+  // Adiciona classe ativa na aba clicada
+  const btnAtiva = document.querySelector(`.aba-btn[onclick="trocarAba('${abaNome}')"]`);
+  if (btnAtiva) btnAtiva.classList.add('ativa');
+  
+  const conteudoAtivo = document.getElementById(`aba-${abaNome}`);
+  if (conteudoAtivo) conteudoAtivo.classList.add('ativa');
+  
+  // Se for a aba de relatórios, carrega os dados
+  if (abaNome === 'relatorios') {
+    setTimeout(() => atualizarRelatorios(), 100);
+  }
+}
+
+// Atualiza todos os relatórios
+async function atualizarRelatorios() {
+  try {
+    console.log('Carregando relatórios...');
+    
+    // Busca todas as viagens
+    const response = await fetch(`${API_URL}/viagens`);
+    
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status}`);
+    }
+    
+    const viagens = await response.json();
+    console.log('Viagens carregadas:', viagens.length);
+    
+    const anoAtual = new Date().getFullYear();
+    
+    // Filtra viagens do ano atual
+    const viagensAno = viagens.filter(v => {
+      if (!v.data_viagem) return false;
+      const dataViagem = new Date(v.data_viagem);
+      return dataViagem.getFullYear() === anoAtual;
+    });
+    
+    console.log('Viagens do ano:', viagensAno.length);
+    
+    // Conta viagens realizadas e pendentes
+    const realizadas = viagensAno.filter(v => v.status === 'realizada').length;
+    const pendentes = viagensAno.filter(v => v.status === 'agendada').length;
+    
+    // Atualiza cards
+    const elRealizadas = document.getElementById('total-realizadas');
+    const elPendentes = document.getElementById('total-pendentes');
+    const elAnoAtual = document.getElementById('ano-atual');
+    
+    if (elRealizadas) elRealizadas.textContent = realizadas;
+    if (elPendentes) elPendentes.textContent = pendentes;
+    if (elAnoAtual) elAnoAtual.textContent = anoAtual;
+    
+    // Gera gráficos (com verificação se os elementos existem)
+    const canvasMotoristas = document.getElementById('grafico-motoristas');
+    const canvasDestinos = document.getElementById('grafico-destinos');
+    
+    if (canvasMotoristas) {
+      gerarGraficoMotoristas(viagensAno);
+    } else {
+      console.warn('Canvas de motoristas não encontrado');
+    }
+    
+    if (canvasDestinos) {
+      gerarGraficoDestinos(viagensAno);
+    } else {
+      console.warn('Canvas de destinos não encontrado');
+    }
+    
+    console.log('Relatórios carregados com sucesso!');
+    
+  } catch (error) {
+    console.error('Erro ao atualizar relatórios:', error);
+    notificar('Erro ao carregar relatórios: ' + error.message, 'erro');
+  }
+}
+
+// Gráfico de Viagens por Motorista
+function gerarGraficoMotoristas(viagens) {
+  const canvas = document.getElementById('grafico-motoristas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  // Conta viagens por motorista
+  const contagem = {};
+  viagens.forEach(v => {
+    if (v.nome_motorista) {
+      contagem[v.nome_motorista] = (contagem[v.nome_motorista] || 0) + 1;
+    }
+  });
+  
+  // Prepara dados para o gráfico
+  const labels = Object.keys(contagem);
+  const dados = Object.values(contagem);
+  
+  // Destrói gráfico anterior se existir
+  if (window.graficoMotoristas) {
+    window.graficoMotoristas.destroy();
+  }
+  
+  // Cria novo gráfico
+  window.graficoMotoristas = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Viagens',
+        data: dados,
+        backgroundColor: [
+          '#28a745', '#007bff', '#dc3545', '#ffc107', 
+          '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+
+// Gráfico de Viagens por Destino
+function gerarGraficoDestinos(viagens) {
+  const canvas = document.getElementById('grafico-destinos');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  // Conta viagens por destino (cidade + local)
+  const contagem = {};
+  viagens.forEach(v => {
+    const destino = `${v.cidade_destino || ''} - ${v.local_destino || ''}`.trim();
+    if (destino && destino !== '-') {
+      contagem[destino] = (contagem[destino] || 0) + 1;
+    }
+  });
+  
+  // Prepara dados
+  const labels = Object.keys(contagem);
+  const dados = Object.values(contagem);
+  
+  // Destrói gráfico anterior
+  if (window.graficoDestinos) {
+    window.graficoDestinos.destroy();
+  }
+  
+  // Cria gráfico de pizza
+  window.graficoDestinos = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dados,
+        backgroundColor: [
+          '#28a745', '#007bff', '#dc3545', '#ffc107', 
+          '#17a2b8', '#6f42c1', '#fd7e14', '#20c997',
+          '#e83e8c', '#6610f2', '#20c997', '#fd7e14'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            boxWidth: 12,
+            font: {
+              size: 11
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// ====================================================================================
 // INICIALIZAÇÃO
 // ====================================================================================
 
-// DOMContentLoaded dispara quando o HTML terminou de carregar.
-// Liga tudo: data de hoje, eventos...
 document.addEventListener('DOMContentLoaded', () => {
-  // Mensagem no console para confirmar que o script rodou
   console.log('App carregado!');
   
   // Pega a data de hoje no formato "AAAA-MM-DD"
@@ -791,8 +989,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Pega o campo de data e coloca a data de hoje nele
   const campoData = document.getElementById('data-selecionada');
-  
-  if (campoData) campoData.value = hoje;
+  if (campoData) {
+    campoData.value = hoje;
+    console.log('Data selecionada:', hoje);
+  }
 
   // Atualiza o texto grande com a data de hoje
   atualizarTextoData(hoje);
@@ -803,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Quando o usuário trocar a data no campo...
   if (campoData) {
     campoData.addEventListener('change', (e) => {
-      atualizarTextoData(e.target.value); // Atualiza o texto da data
+      atualizarTextoData(e.target.value);
       carregarViagensDia();
     });
   }
@@ -819,8 +1019,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Quando o calendário (outra janela) escolher uma data, o Electron nos avisa
   if (window.electronAPI && window.electronAPI.onDataSelecionada) {
     window.electronAPI.onDataSelecionada((data) => {
-      if (campoData) campoData.value = data;  // Coloca a data no campo
-      atualizarTextoData(data); // Atualiza o texto
+      if (campoData) campoData.value = data;
+      atualizarTextoData(data);
       carregarViagensDia();
     });
   }
@@ -829,8 +1029,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalAlerta = document.getElementById('modalAlerta');
   if (modalAlerta) {
     modalAlerta.addEventListener('click', (event) => {
-      // Só fecha se o clique foi fora
       if (event.target === modalAlerta) fecharModalAlerta();
     });
+  }
+
+  // Define o ano atual nos relatórios
+  const elAnoAtual = document.getElementById('ano-atual');
+  if (elAnoAtual) {
+    elAnoAtual.textContent = new Date().getFullYear();
   }
 });
