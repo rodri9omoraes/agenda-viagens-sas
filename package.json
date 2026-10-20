@@ -1,8 +1,9 @@
 {
   "name": "agenda-viagens-sas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sistema de Agenda de Viagens - Secretaria de Assistência Social",
   "main": "main.js",
+  "icon": "assets/ICON_SAS.ico",
   "scripts": {
     "start": "electron .",
     "dev": "nodemon --watch . --exec electron .",

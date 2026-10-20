@@ -11,6 +11,7 @@ function criarJanela() {
   mainJanela = new BrowserWindow({
     width: 1200,
     height: 800,
+    icon: path.join(__dirname, 'assets/ICON_SAS.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,

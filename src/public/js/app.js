@@ -1038,4 +1038,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elAnoAtual) {
     elAnoAtual.textContent = new Date().getFullYear();
   }
+
+  const campoTel1 = document.getElementById('telefone1');
+  const campoTel2 = document.getElementById('telefone2');
+
+  if (campoTel1) {
+    IMask(campoTel1, {
+      mask: '(00) 00000-0000'
+    });
+  }
+
+  if (campoTel2) {
+    IMask(campoTel2, {
+      mask: '(00) 00000-0000'
+    });
+  }
 });

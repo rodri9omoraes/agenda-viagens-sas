@@ -21,6 +21,11 @@ body {
 }
 
 .cabecalho-caderno {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #1e3a5f 80%, #2d5a87 20%);
   padding: 25px 30px;
   color: white;
@@ -66,6 +71,42 @@ body {
   position: relative;
   z-index: 1;
   margin-bottom: 20px;
+}
+
+.cabecalho-esquerda {
+  flex: 1;
+}
+
+.cabecalho-direita {
+  display: flex;
+  align-items: center;
+  /*justify-content: flex-end;*/
+  padding-right: 5px;
+}
+
+.logo-cabecalho {
+  max-height: 160px;
+  max-width: 290px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  transition: transform 0.3s ease;
+}
+
+.logo-cabecalho:hover {
+  transform: scale(1.05);
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .cabecalho-caderno {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .cabecalho-direita {
+    justify-content: center;
+  }
 }
 
 .btn-calendario {
