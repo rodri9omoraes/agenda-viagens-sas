@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Agenda de Viagens - SAS</title>
   <link rel="stylesheet" href="css/estilo-caderno.css">
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/imask"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -40,7 +42,11 @@
         <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
         <button class="btn btn-secondary" onclick="hardReset()">🔄 Atualizar</button>
         <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem</button>
-        <input type="date" id="data-selecionada">
+        <div class="navegacao-data">
+          <button class="btn-dia" onclick="mudarDia(-1)" title="Dia Anterior">◀</button>
+          <input type="date" id="data-selecionada">
+          <button class="btn-dia" onclick="mudarDia(1)" title="Próximo Dia">▶</button>
+        </div>
       </div>
 
       <div class="lista-viagens" id="lista-viagens">

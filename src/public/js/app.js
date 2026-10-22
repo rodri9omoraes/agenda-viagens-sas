@@ -139,6 +139,82 @@ function atualizarCalendarioSeAberto() {
 }
 
 // ====================================================================================
+// NAVEGAÇÃO DE DIA
+// ====================================================================================
+function mudarDia(direcao) {
+  const campoData = document.getElementById('data-selecionada');
+  if (!campoData || !campoData.value) return;
+
+  const dataAtual = new Date(campoData.value);
+  dataAtual.setDate(dataAtual.getDate() + direcao);
+
+  const novaData = dataAtual.toISOString().split('T')[0];
+  campoData.value = novaData;
+
+  atualizarTextoData(novaData);
+  carregarViagensDia();
+}
+
+// Agrupar viagens por destino e horário de saída
+function agruparViagens(viagens){
+  const grupos = {};
+
+  viagens.forEach(viagem => {
+    // Chave única: destino + local + horário de saída
+    const chave = `${viagem.cidade_destino}|${viagem.horario_saida || 'sem-horario'}`;
+
+    if (!grupos[chave]) {
+      grupos[chave] = {
+        cidade: viagem.cidade_destino,
+        local: viagem.local_destino,
+        horarioSaida: viagem.horario_saida,
+        horario_atendimento: viagem.horario_atendimento,
+        motorista: viagem.nome_motorista,
+        passageiros: []
+      };
+    }
+
+    grupos[chave].passageiros.push(viagem);
+  });
+
+  return Object.values(grupos);
+}
+
+// Renderizar viagens aggrupadas
+function renderizarViagensAgrupadas(viagens) {
+  const grupos = agruparViagens(viagens);
+
+  return grupos.map(grupo => {
+    const passageirosHTML = grupo.passageiros.map(p => `
+      <div class="passageiro-item">
+        <div class="passageiro-nome">👤 ${p.nome_pessoa}</div>
+        ${p.endereco ? `<div class="passageiro-info">📍 ${p.endereco}</div>` : ''}
+        ${p.telefone1 ? `<div class="passageiro-info"> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
+        ${p.observacoes ? `<div class="passageiro-info">📝 ${p.observacoes}</div>` : ''}
+        ${p.quem_autorizou ? `<div class="passageiro-info" style="font-size: 12px; color: #999; margin-top: 8px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
+        <div class="grupo-acoes">
+          <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
+          ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarViagem(${p.id})">❌ Cancelar</button>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="grupo-viagem">
+        <div class="grupo-header">
+          🏙️ ${grupo.cidade} - ${grupo.local}
+          ${grupo.horarioAtendimento ? `- ${grupo.horarioAtendimento}` : ''}
+          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000;">🚗 Saída: ${grupo.horarioSaida}</span>` : ''}
+        </div>
+        ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #666;">🚗 Motorista: <strong>${grupo.motorista}</strong></div>` : ''}
+        ${passageirosHTML}
+      </div>
+    `;
+  }).join('');
+}
+
+
+// ====================================================================================
 // VIAGENS
 // ====================================================================================
 
@@ -169,33 +245,24 @@ function montarCardViagem(viagem, opcoes = {}){
     </div>`;
 }
 
-// Buscar as viagens da data escolhida e apresenta-la na tela
-
+// Buscar as viagens da data escolhida e apresenta-las na tela
 async function carregarViagensDia() {
-  // Pega a data selecionada
   const data = pegarDataSelecionada();
-  // Pega a área da tela onde a lista é inserida
   const listaViagens = document.getElementById('lista-viagens');
 
-  // Garante que as férias estejam carreagadas antes de desenhar os avisos
   await carregarFerias();
 
-  // Se não há data, pede para o usuário selecionar uma  
   if (!data) {
     listaViagens.innerHTML = `<div class="empty-state"><div class="icone">📋</div><p>Selecione uma data</p></div>`;
     return;
   }
   
   try {
-    // Chama no servidor as viagens daquela data
     const response = await fetch(`${API_URL}/viagens/data/${data}`);
-    // Se o servidor respondeu com erro, lança o erro e vai para o catch
     if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
     
-    //Converte a resposta de texto JSON para uma lista de viagens
     const viagens = await response.json();
     
-    // Se a lista veio vazia, mostra "nenhuma viagem"
     if (viagens.length === 0) {
       listaViagens.innerHTML = `
         <div class="empty-state">
@@ -205,27 +272,59 @@ async function carregarViagensDia() {
       return;
     }
 
-    // Para cada viagem, monta um card
-    const html = viagens.map((viagem) => {
-      // Inicia sem nenhum aviso
-      let avisoFerias = '';
-      // Lógica para verificar se o motorista está de férias
-      if (viagem.nome_motorista && motoristaEstaDeFerias(viagem.nome_motorista, data)) {
-        avisoFerias = `<div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 14px; font-weight: bold;">
-            ⚠️ ATENÇÃO: ${viagem.nome_motorista} está de FÉRIAS neste período!
+    // Agrupa as viagens por destino e horário
+    const grupos = agruparViagens(viagens);
+    let htmlGrupos = '';
+
+    // Percorre cada GRUPO de viagem
+    grupos.forEach(grupo => {
+      // Verifica se o motorista deste grupo está de férias
+      let avisoFeriasGrupo = '';
+      if (grupo.motorista && motoristaEstaDeFerias(grupo.motorista, data)) {
+        avisoFeriasGrupo = `<div style="background: #fff3cd; color: #856404; padding: 8px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; font-weight: bold; text-align: center;">
+            ⚠️ ATENÇÃO: O motorista ${grupo.motorista} está de FÉRIAS neste período!
           </div>`;
       }
-      // Devolve o card pronto, com os botões de editar/cancelar
-      return montarCardViagem(viagem, { comAcoes: true, avisoFerias });
-    }).join(''); //join(') junta todos os cartões em um único texto
+      
+      // Monta os cards dos passageiros dentro deste grupo
+      const passageirosHTML = grupo.passageiros.map(p => `
+        <div class="passageiro-item">
+          <div class="passageiro-nome">👤 ${p.nome_pessoa}</div>
+          ${p.endereco ? `<div class="passageiro-info"> ${p.endereco}</div>` : ''}
+          ${p.telefone1 ? `<div class="passageiro-info">📞 ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
+          ${p.observacoes ? `<div class="passageiro-info">📝 ${p.observacoes}</div>` : ''}
+          ${p.quem_autorizou ? `<div class="passageiro-info" style="font-size: 12px; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
+          
+          <div class="grupo-acoes">
+            <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
+            ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarViagem(${p.id})">❌ Cancelar</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      // Monta o card principal do grupo
+      htmlGrupos += `
+        <div class="grupo-viagem">
+          <div class="grupo-header">
+            🏙️ ${grupo.cidade} - ${grupo.local}
+            ${grupo.horarioAtendimento ? ` | 🕐 ${grupo.horarioAtendimento}` : ''}
+            ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000; font-weight: bold;">🚗 Saída: ${grupo.horarioSaida}</span>` : ''}
+          </div>
+          
+          ${avisoFeriasGrupo}
+          
+          ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #1e3a5f; font-weight: 600;">🚗 Motorista: ${grupo.motorista}</div>` : ''}
+          
+          ${passageirosHTML}
+        </div>
+      `;
+    });
 
-    //Coloca todos os cartões na tela de uma vez
-    listaViagens.innerHTML = html;
-    
+    // Coloca tudo na tela com a classe de Grid
+    listaViagens.innerHTML = `<div class="lista-viagens-grid">${htmlGrupos}</div>`;
+
   } catch (error) {
-    // Registra o erro no console
     console.error('Erro ao carregar viagens:', error);
-    // Mostra o erro na tela
     listaViagens.innerHTML = `<div class="empty-state" style="color: red;"><p>Erro ao carregar: ${error.message}</p></div>`;
   }
 }
