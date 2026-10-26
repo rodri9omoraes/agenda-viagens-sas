@@ -39,12 +39,15 @@
       </div>
 
       <div class="botoes-cadastro">
-        <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
-        <button class="btn btn-secondary" onclick="hardReset()">🔄 Atualizar</button>
-        <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem</button>
+        <div class="grupo-botoes">
+          <button class="btn btn-primary" onclick="abrirModal()">➕ Nova Viagem</button>
+          <button class="btn btn-secondary" onclick="hardReset()">🔄 Atualizar</button>
+          <button class="btn btn-imagem" onclick="gerarImagemDia()">📸 Gerar Imagem</button>
+        </div>
+
         <div class="navegacao-data">
           <button class="btn-dia" onclick="mudarDia(-1)" title="Dia Anterior">◀</button>
-          <input type="date" id="data-selecionada">
+          <input type="date" id="data-selecionada" style="padding: 10px; font-size: 15px;">
           <button class="btn-dia" onclick="mudarDia(1)" title="Próximo Dia">▶</button>
         </div>
       </div>
@@ -96,7 +99,7 @@
     </div>
   </div>
 
-  <!-- MODAIS (mantenha todos os modais que já tem aqui) -->
+  <!-- MODAIS -->
   <!-- Modal de Viagem -->
   <div id="modalViagem" class="modal" onclick="fecharModalSeForFundo(event)" tabindex="-1">
     <div class="modal-content">

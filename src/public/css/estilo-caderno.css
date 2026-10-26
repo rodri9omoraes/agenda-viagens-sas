@@ -127,7 +127,10 @@ body {
   }
 
   .lista-viagens-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    align-items: stretch;
   }
 }
 
@@ -159,13 +162,20 @@ body {
 /* BARRA DE AÇÕES */
 .botoes-cadastro {
   padding: 25px 50px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
   display: flex;
   gap: 15px;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  justify-content: space-between;
+}
+
+.botoes-cadastro .grupo-botoes {
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 /* Botões */
@@ -362,13 +372,15 @@ body {
 
 /* Grupo de viagem (quando há múltiplos passageiros */
 .grupo-viagem {
+  display: flex;
+  flex-direction: column;
   background: white;
   border-radius: 16px;
   padding: 25px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
   border-left: 5px solid #ccff00;
   transition: all 0.3s;
-  min-height: 250px;
+  min-height: 280px;
 }
 
 .grupo-viagem:hover {
@@ -388,9 +400,32 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.grupo-header-esquerda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.grupo-destino {
+  font-size: 17px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.grupo-horario {
+  font-size: 15px;
+  color: #1e3a5f;
+  font-weight: 500;
 }
 
 .passageiro-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   padding: 18px;
   margin-bottom: 15px;
   background: #f8f9fa;
@@ -416,9 +451,10 @@ body {
 }
 
 .grupo-acoes {
-  margin-top: 20px;
+  margin-top: auto;
   display: flex;
   gap: 12px;
+  padding-top: 15px;
 }
 
 .grupo-acoes.btn {
@@ -652,6 +688,8 @@ body {
   background: #20fa20;
   border-radius: 8px;
   display: inline-block;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /*LINHA 7: Autorizado por*/
@@ -918,6 +956,15 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: auto;
+}
+
+.navegacao-data input [type="date"] {
+  padding: 10px 14px;
+  font-size: 15px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
 }
 
 .btn-dia {

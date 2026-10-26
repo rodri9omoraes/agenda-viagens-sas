@@ -204,7 +204,7 @@ function renderizarViagensAgrupadas(viagens) {
         <div class="grupo-header">
           🏙️ ${grupo.cidade} - ${grupo.local}
           ${grupo.horarioAtendimento ? `- ${grupo.horarioAtendimento}` : ''}
-          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000;">🚗 Saída: ${grupo.horarioSaida}</span>` : ''}
+          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
         </div>
         ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #666;">🚗 Motorista: <strong>${grupo.motorista}</strong></div>` : ''}
         ${passageirosHTML}
@@ -306,9 +306,13 @@ async function carregarViagensDia() {
       htmlGrupos += `
         <div class="grupo-viagem">
           <div class="grupo-header">
-            🏙️ ${grupo.cidade} - ${grupo.local}
-            ${grupo.horarioAtendimento ? ` | 🕐 ${grupo.horarioAtendimento}` : ''}
-            ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000; font-weight: bold;">🚗 Saída: ${grupo.horarioSaida}</span>` : ''}
+            <div class="grupo-header-esquerda">
+              <div class="grupo-destino">            
+                🏙️ ${grupo.cidade} - ${grupo.local}
+              </div>
+              ${grupo.horario_atendimento ? `<div class="grupo-horario"> 🕐 ${grupo.horario_atendimento}</div>` : ''}
+            </div>
+            ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000; font-weight: bold;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''} 
           </div>
           
           ${avisoFeriasGrupo}
