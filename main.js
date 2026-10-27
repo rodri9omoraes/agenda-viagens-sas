@@ -19,6 +19,8 @@ function criarJanela() {
     }
   });
 
+  mainJanela.maximize(); // Faz janela abrir Maximizada
+
   mainJanela.loadFile('src/public/index.html');
 }
 

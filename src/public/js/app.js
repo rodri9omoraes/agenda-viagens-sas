@@ -290,17 +290,21 @@ async function carregarViagensDia() {
       const passageirosHTML = grupo.passageiros.map(p => `
         <div class="passageiro-item">
           <div class="passageiro-nome">👤 ${p.nome_pessoa}</div>
-          ${p.endereco ? `<div class="passageiro-info"> ${p.endereco}</div>` : ''}
+          ${p.endereco ? `<div class="passageiro-info">📍 ${p.endereco}</div>` : ''}
           ${p.telefone1 ? `<div class="passageiro-info">📞 ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
           ${p.observacoes ? `<div class="passageiro-info">📝 ${p.observacoes}</div>` : ''}
           ${p.quem_autorizou ? `<div class="passageiro-info" style="font-size: 12px; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
           
           <div class="grupo-acoes">
             <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
-            ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarViagem(${p.id})">❌ Cancelar</button>` : ''}
+            ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="mudarStatusViagem(${p.id}, 'cancelada')">❌ Cancelada</button>` : ''}
+            ${p.status !== 'realizada' ? `<button class="btn" style="background: #28a745; color: white;" onclick="mudarStatusViagem(${p.id}, 'realizada')">✅ Realizada</button>` : ''}
           </div>
         </div>
       `).join('');
+
+      //Determina o Status do grupo
+      const statusGrupo = getStatusDoGrupo(grupo.passageiros);
       
       // Monta o card principal do grupo
       htmlGrupos += `
@@ -432,48 +436,84 @@ async function editarViagem(id) {
   abrirModal(id);
 }
 
-// Chamada pelo botão "Cancelar" da cada cartão
-async function cancelarViagem(id) {
-  // Confirma se realmente deseja cancelar/excluir a viagem
-  const confirmou = await confirmar('Deseja realmente cancelar esta viagem?');
-  // Se responder "Não", não faz nada
+// Muda o status da viagem (Agendada, Realizada ou Cancelada)
+async function mudarStatusViagem(id, novoStatus) {
+  const mensagens = {
+    'cancelada': 'Deseja marcar esta viagem como CANCELADA?',
+    'realizada': 'Deseja marcar esta viagem como REALIZADA?'
+  };
+  
+  const confirmou = await confirmar(mensagens[novoStatus]);
   if (!confirmou) return;
   
   try {
-    // Pede ao servidor para cancelar (DELETE) a viagem
+    const response = await fetch(`${API_URL}/viagens/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: novoStatus })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok) {
+      notificar(`Viagem marcada como ${novoStatus.toUpperCase()}`, 'sucesso');
+      carregarViagensDia();
+      atualizarCalendarioSeAberto();
+    } else {
+      notificar('Erro ao atualizar status: ' + (result.error || result.message), 'erro');
+    }
+  } catch (error) {
+    console.error('Erro de rede:', error);
+    notificar('Erro de conexão com o servidor.', 'erro');
+  }
+}
+
+// Determina o status "mais relevante" do grupo
+function getStatusDoGrupo(passageiros) {
+  const temCancelada = passageiros.some(p => p.status === 'cancelada');
+  const temAgendada = passageiros.some(p => p.status === 'agendada');
+  
+  if (temCancelada) return 'cancelada';
+  if (temAgendada) return 'agendada';
+  return 'realizada';
+}
+
+// Retorna o HTML do badge de status
+function getBadgeStatus(status) {
+  const estilos = {
+    'cancelada': 'background: #dc3545; color: white; letter-spacing: 2px;',
+    'agendada': 'background: #ffc107; color: #000; letter-spacing: 2px;',
+    'realizada': 'background: #28a745; color: white; letter-spacing: 2px;'
+  };
+  
+  const labels = {
+    'cancelada': 'CANCELADA',
+    'agendada': 'AGENDADA',
+    'realizada': 'REALIZADA'
+  };
+  
+  return `<span style="${estilos[status]}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${labels[status]}</span>`;
+}
+
+// Deleta permanentemente a viagem do banco
+async function deletarViagem(id) {
+  const confirmou = await confirmar('⚠️ ATENÇÃO: Deseja DELETAR PERMANENTEMENTE esta viagem? Esta ação não pode ser desfeita.');
+  if (!confirmou) return;
+  
+  try {
     const response = await fetch(`${API_URL}/viagens/${id}`, { method: 'DELETE' });
     
-    // Verifica o tipo da resposta (JSON ou Texto Simples)
-    const contentType = response.headers.get("content-type");
-    // Variável que vai guardar o resultado já convertido
-    let result;
-    // Se veio como JSON, lê como JSON
-    if (contentType && contentType.includes("application/json")) {
-      result = await response.json();
-    } else {
-      // Senão, lê como texto e guarda dentro de um objeto como "message"
-      const text = await response.text();
-      result = { message: text };
-    }
-
-    //Se deu certo
     if (response.ok) {
-      notificar(result.message, 'sucesso');
+      notificar('Viagem deletada permanentemente', 'sucesso');
+      fecharModal();
+      carregarViagensDia();
+      atualizarCalendarioSeAberto();
     } else {
-      // Registra o problema no console e avisa o usuário
-      console.warn('Servidor retornou erro, mas pode ter deletado:', result);
-      notificar('⚠️ Viagem removida da lista, mas houve um erro ao salvar no disco. Reinicie o app se necessário.');
+      notificar('Erro ao deletar viagem', 'erro');
     }
-    // Nos dois casos, recarrega a lista para mostrar o estado atual
-    carregarViagensDia();
-    // Atualiza o calendario
-    atualizarCalendarioSeAberto();
-
   } catch (error) {
-    // Registra o erro de rede no console 
     console.error('Erro de rede:', error);
-    // Avisa o usuário
-    notificar('erro');
+    notificar('Erro de conexão com o servidor.', 'erro');
   }
 }
 
@@ -503,33 +543,48 @@ function abrirModal(idViagem = null) {
 
   // Se veio um id, estamos EDITANDO
   if (idViagem) {
-    tituloModal.textContent = '✏️ Editar Viagem';
-    grupoMotorista.style.display = 'block';
-    grupoStatus.style.display = 'block';
-    buscarViagem(idViagem);
-  } else {
-    // Senão, estamos CRIANDO
-    tituloModal.textContent = '➕ Cadastrar Nova Viagem';
-    grupoMotorista.style.display = 'none';    // Esconde o campo motorista
-    grupoStatus.style.display = 'none';     // Esconde o campo status
-    document.getElementById('viagem-id').value = '';    //Garante que o ID esteja vazio
+  tituloModal.textContent = '✏️ Editar Viagem';
+  grupoMotorista.style.display = 'block';
+  grupoStatus.style.display = 'block';
+  buscarViagem(idViagem);
+  
+  // Adiciona botão de deletar no modal (remove se já existir)
+  const btnDeletarExistente = document.getElementById('btn-deletar-viagem');
+  if (btnDeletarExistente) btnDeletarExistente.remove();
+  
+  const btnDeletar = document.createElement('button');
+  btnDeletar.id = 'btn-deletar-viagem';
+  btnDeletar.type = 'button';
+  btnDeletar.className = 'btn';
+  btnDeletar.style.cssText = 'background: #dc3545; color: white; margin-left: auto;';
+  btnDeletar.textContent = '🗑️ Deletar Permanentemente';
+  btnDeletar.onclick = () => deletarViagem(idViagem);
+  
+  // Adiciona o botão no final das ações do modal
+  const modalAcoes = document.querySelector('.modal-acoes');
+  if (modalAcoes) {
+    modalAcoes.insertBefore(btnDeletar, modalAcoes.firstChild);
+  }
+} else {
+  // Modo criação: remove botão de deletar se existir
+  const btnDeletarExistente = document.getElementById('btn-deletar-viagem');
+  if (btnDeletarExistente) btnDeletarExistente.remove();
+  
+  tituloModal.textContent = '➕ Cadastrar Nova Viagem';
+  grupoMotorista.style.display = 'none';
+  grupoStatus.style.display = 'none';
+  document.getElementById('viagem-id').value = '';
+  
+  const dataSelecionada = pegarDataSelecionada();
+  if (dataSelecionada) {
+    document.getElementById('data_viagem').value = dataSelecionada;
     
-    // Usa a data que está selecionada na tela como data da nova viagem
-    const dataSelecionada = pegarDataSelecionada();
-
-    if (dataSelecionada) {
-      // Preenche a data no formulário
-      document.getElementById('data_viagem').value = dataSelecionada;
-
-      //Verificar se há motoristas de férias nessa data
-      const motoristasDeFerias = listarMotoristasDeFerias(dataSelecionada);
-
-      // Se houver, mostra o alerta personalizado
-      if (motoristasDeFerias.length > 0) {
-        mostrarAlertaMotoristasFerias(motoristasDeFerias, formatarDataBrasil(dataSelecionada));
-      }
+    const motoristasDeFerias = listarMotoristasDeFerias(dataSelecionada);
+    if (motoristasDeFerias.length > 0) {
+      mostrarAlertaMotoristasFerias(motoristasDeFerias, formatarDataBrasil(dataSelecionada));
     }
   }
+}
 
   // Mostrar o Modal na tela
   modal.style.display = 'block';
