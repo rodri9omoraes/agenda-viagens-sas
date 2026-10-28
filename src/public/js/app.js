@@ -297,8 +297,14 @@ async function carregarViagensDia() {
           
           <div class="grupo-acoes">
             <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
-            ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="mudarStatusViagem(${p.id}, 'cancelada')">❌ Cancelada</button>` : ''}
-            ${p.status !== 'realizada' ? `<button class="btn" style="background: #28a745; color: white;" onclick="mudarStatusViagem(${p.id}, 'realizada')">✅ Realizada</button>` : ''}
+            <button class="btn" style="background: #dc3545; color: white; ${p.status === 'cancelada' ? 'opacity: 0.5; cursor: default;' : ''}" 
+              onclick="${p.status !== 'cancelada' ? `mudarStatusViagem(${p.id}, 'cancelada')` : 'return false'}">
+              ❌ Cancelada
+            </button>
+            <button class="btn" style="background: #28a745; color: white; ${p.status === 'realizada' ? 'opacity: 0.5; cursor: default;' : ''}" 
+              onclick="${p.status !== 'realizada' ? `mudarStatusViagem(${p.id}, 'realizada')` : 'return false'}">
+              ✅ Realizada
+            </button>
           </div>
         </div>
       `).join('');
@@ -321,8 +327,13 @@ async function carregarViagensDia() {
           
           ${avisoFeriasGrupo}
           
-          ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #1e3a5f; font-weight: 600;">🚗 Motorista: ${grupo.motorista}</div>` : ''}
-          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 2px 1px; background: #f8f9fa; border-radius: 8px;">
+            <span style="font-size: 14px; color: #1e3a5f; font-weight: 600;">
+              ${grupo.motorista ? `🚗 Motorista: ${grupo.motorista}` : ''}
+            </span>
+            ${getBadgeStatus(statusGrupo)}
+          </div>
+
           ${passageirosHTML}
         </div>
       `;
@@ -447,13 +458,30 @@ async function mudarStatusViagem(id, novoStatus) {
   if (!confirmou) return;
   
   try {
+    // Busca a viagem completa primeiro
+    const viagemResponse = await fetch(`${API_URL}/viagens/${id}`);
+    const viagem = await viagemResponse.json();
+
+    console.log(' Viagem antes:', viagem);
+
+    // Atualiza apenas o status, mantendo todos os outros campos
+    const dadosAtualizados = {
+      ...viagem,
+      status: novoStatus
+    };
+
+    console.log('📤 Enviando:', dadosAtualizados);
+
+    // Envia a viagem completa como o novo status
     const response = await fetch(`${API_URL}/viagens/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: novoStatus })
+      body: JSON.stringify(dadosAtualizados)
     });
     
     const result = await response.json();
+
+    console.log('📥 Resposta:', result);
     
     if (response.ok) {
       notificar(`Viagem marcada como ${novoStatus.toUpperCase()}`, 'sucesso');
@@ -486,13 +514,37 @@ function getBadgeStatus(status) {
     'realizada': 'background: #28a745; color: white; letter-spacing: 2px;'
   };
   
+  const icones = {
+    'cancelada': '❌',
+    'agendada': '📅',
+    'realizada': '✅'
+  };
+  
   const labels = {
     'cancelada': 'CANCELADA',
     'agendada': 'AGENDADA',
     'realizada': 'REALIZADA'
   };
   
-  return `<span style="${estilos[status]}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">${labels[status]}</span>`;
+  // Se não vier status, assume agendada
+  const statusFinal = status || 'agendada';
+
+  return `
+    <span style="
+      ${estilos[statusFinal]};
+      padding: 4px 12px;
+      border-radius: 20px; 
+      font-size: 12px; 
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: incline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 2px solid rgba(255,255,255,0.3);
+    ">
+      ${icones[statusFinal]} ${labels[statusFinal]}
+    </span>
+  `;
 }
 
 // Deleta permanentemente a viagem do banco
@@ -829,7 +881,10 @@ async function gerarImagemDia() {
   try {
     // Busca as viagens do dia
     const response = await fetch(`${API_URL}/viagens/data/${data}`);
-    const viagens = await response.json();
+    let viagens = await response.json();
+
+    // Filtra viagens canceladas (Não devem aparecerer na imagem)
+    viagens = viagens.filter(v => v.status !== 'cancelada');
     
     // Se não há viagens, avisa e para
     if (viagens.length === 0) {

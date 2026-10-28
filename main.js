@@ -155,7 +155,7 @@ function startServer() {
     try {
       const viagens = db.getAll(`
         SELECT * FROM viagens 
-        WHERE data_viagem = ? AND status != 'cancelada'
+        WHERE data_viagem = ?
         ORDER BY horario_atendimento
       `, [req.params.data]);
       res.json(viagens);
