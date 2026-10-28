@@ -186,12 +186,12 @@ function renderizarViagensAgrupadas(viagens) {
 
   return grupos.map(grupo => {
     const passageirosHTML = grupo.passageiros.map(p => `
-      <div class="passageiro-item">
-        <div class="passageiro-nome">👤 ${p.nome_pessoa}</div>
-        ${p.endereco ? `<div class="passageiro-info">📍 ${p.endereco}</div>` : ''}
-        ${p.telefone1 ? `<div class="passageiro-info"> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
-        ${p.observacoes ? `<div class="passageiro-info">📝 ${p.observacoes}</div>` : ''}
-        ${p.quem_autorizou ? `<div class="passageiro-info" style="font-size: 12px; color: #999; margin-top: 8px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
+      <div class="viagem-item">
+        <div class="viagem-nome">👤 ${p.nome_pessoa}</div>
+        ${p.endereco ? `<div class="viagem-info">📌 ${p.endereco}</div>` : ''}
+        ${p.telefone1 ? `<div class="viagem-info"> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
+        ${p.observacoes ? `<div class="viagem-info">📝 ${p.observacoes}</div>` : ''}
+        ${p.quem_autorizou ? `<div class="viagem-autorizado" style="font-size: 12px; color: #999; margin-top: 8px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
         <div class="grupo-acoes">
           <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
           ${p.status !== 'cancelada' ? `<button class="btn btn-danger" onclick="cancelarViagem(${p.id})">❌ Cancelar</button>` : ''}
@@ -204,9 +204,9 @@ function renderizarViagensAgrupadas(viagens) {
         <div class="grupo-header">
           🏙️ ${grupo.cidade} - ${grupo.local}
           ${grupo.horarioAtendimento ? `- ${grupo.horarioAtendimento}` : ''}
-          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
+          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 8px; color: #000; font-size: 18px;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
         </div>
-        ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #666;">🚗 Motorista: <strong>${grupo.motorista}</strong></div>` : ''}
+        ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #665;">🚗 Motorista: <strong>${grupo.motorista}</strong></div>` : ''}
         ${passageirosHTML}
       </div>
     `;
@@ -230,7 +230,7 @@ function montarCardViagem(viagem, opcoes = {}){
         🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
       </div>
       <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
-      ${viagem.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${viagem.endereco}</div>` : ''}
+      ${viagem.endereco ? `<div class="viagem-info"><strong>📌 Endereço:</strong> ${viagem.endereco}</div>` : ''}
       ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
       ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
       ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}
@@ -287,22 +287,26 @@ async function carregarViagensDia() {
       }
       
       // Monta os cards dos passageiros dentro deste grupo
-      const passageirosHTML = grupo.passageiros.map(p => `
-        <div class="passageiro-item">
-          <div class="passageiro-nome">👤 ${p.nome_pessoa}</div>
-          ${p.endereco ? `<div class="passageiro-info">📍 ${p.endereco}</div>` : ''}
-          ${p.telefone1 ? `<div class="passageiro-info">📞 ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
-          ${p.observacoes ? `<div class="passageiro-info">📝 ${p.observacoes}</div>` : ''}
-          ${p.quem_autorizou ? `<div class="passageiro-info" style="font-size: 12px; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 5px;">Autorizado por: ${p.quem_autorizou}</div>` : ''}
+      const passageirosHTML = grupo.passageiros.map((p) => `
+        <div class="viagem-item">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="viagem-nome">${p.nome_pessoa}</div>
+            ${getBadgeStatus(p.status)}
+          </div>
+
+          ${p.endereco ? `<div class="viagem-info"><strong>📌 Endereço:</strong> ${p.endereco}</div>` : ''}
+          ${p.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
+          ${p.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${p.observacoes}</div>` : ''}
+          ${p.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${p.quem_autorizou}</div>` : ''}
           
           <div class="grupo-acoes">
-            <button class="btn btn-secondary" onclick="editarViagem(${p.id})">✏️ Editar</button>
-            <button class="btn" style="background: #dc3545; color: white; ${p.status === 'cancelada' ? 'opacity: 0.5; cursor: default;' : ''}" 
-              onclick="${p.status !== 'cancelada' ? `mudarStatusViagem(${p.id}, 'cancelada')` : 'return false'}">
+            <button class="btn-acao btn-editar" onclick="editarViagem(${p.id})">✏️ Editar</button>
+            <button class="btn-acao btn-cancelar" style="${p.status === 'cancelada' ? 'opacity: 0.4; cursor: not-allowed;' : ''}" 
+                    onclick="${p.status !== 'cancelada' ? `mudarStatusViagem(${p.id}, 'cancelada')` : 'return false'}">
               ❌ Cancelada
             </button>
-            <button class="btn" style="background: #28a745; color: white; ${p.status === 'realizada' ? 'opacity: 0.5; cursor: default;' : ''}" 
-              onclick="${p.status !== 'realizada' ? `mudarStatusViagem(${p.id}, 'realizada')` : 'return false'}">
+            <button class="btn-acao btn-realizada" style="${p.status === 'realizada' ? 'opacity: 0.4; cursor: not-allowed;' : ''}" 
+                    onclick="${p.status !== 'realizada' ? `mudarStatusViagem(${p.id}, 'realizada')` : 'return false'}">
               ✅ Realizada
             </button>
           </div>
@@ -310,7 +314,7 @@ async function carregarViagensDia() {
       `).join('');
 
       //Determina o Status do grupo
-      const statusGrupo = getStatusDoGrupo(grupo.passageiros);
+      //const statusGrupo = getStatusDoGrupo(grupo.passageiros);
       
       // Monta o card principal do grupo
       htmlGrupos += `
@@ -320,20 +324,15 @@ async function carregarViagensDia() {
               <div class="grupo-destino">            
                 🏙️ ${grupo.cidade} - ${grupo.local}
               </div>
-              ${grupo.horario_atendimento ? `<div class="grupo-horario"> 🕐 ${grupo.horario_atendimento}</div>` : ''}
+              ${grupo.horario_atendimento ? `<div class="grupo-horario">🕐 ${grupo.horario_atendimento}</div>` : ''}
             </div>
-            ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 6px; color: #000; font-weight: bold;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''} 
+            ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' ? `<span style="background: #ccff00; padding: 6px 14px; border-radius: 6px; color: #000; font-weight: bold; font-size: 14px;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
           </div>
           
           ${avisoFeriasGrupo}
           
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 2px 1px; background: #f8f9fa; border-radius: 8px;">
-            <span style="font-size: 14px; color: #1e3a5f; font-weight: 600;">
-              ${grupo.motorista ? `🚗 Motorista: ${grupo.motorista}` : ''}
-            </span>
-            ${getBadgeStatus(statusGrupo)}
-          </div>
-
+          ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #1e3a5f; font-weight: 600;"> Motorista: ${grupo.motorista}</div>` : ''}
+          
           ${passageirosHTML}
         </div>
       `;
@@ -509,9 +508,9 @@ function getStatusDoGrupo(passageiros) {
 // Retorna o HTML do badge de status
 function getBadgeStatus(status) {
   const estilos = {
-    'cancelada': 'background: #dc3545; color: white; letter-spacing: 2px;',
-    'agendada': 'background: #ffc107; color: #000; letter-spacing: 2px;',
-    'realizada': 'background: #28a745; color: white; letter-spacing: 2px;'
+    'cancelada': 'background: linear-gradient(135deg, #dc3545 0%, #b32735 100%); color: white;',
+    'agendada': 'background: linear-gradient(135deg, #ffc107 0%, #c7980a 100%); color: #000;',
+    'realizada': 'background: linear-gradient(135deg, #28a745 0%, #206d30 100%); color: white;'
   };
   
   const icones = {
@@ -904,7 +903,7 @@ async function gerarImagemDia() {
           🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
         </div>
         <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
-        ${viagem.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${viagem.endereco}</div>` : ''}
+        ${viagem.endereco ? `<div class="viagem-info"><strong>📌 Endereço:</strong> ${viagem.endereco}</div>` : ''}
         ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
         ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
         ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}

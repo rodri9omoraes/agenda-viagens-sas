@@ -176,6 +176,7 @@ body {
   display: flex;
   gap: 15px;
   align-items: center;
+  padding: 5px 10px;
 }
 
 /* Botões */
@@ -331,7 +332,7 @@ body {
 }
 
 .viagem-info {
-  font-size: 20px;
+  font-size: 15px;
   color: #495057;
   line-height: 1.8;
 }
@@ -422,15 +423,14 @@ body {
   font-weight: 500;
 }
 
+/* Container do passageiro com layout flex */
 .passageiro-item {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
   padding: 18px;
-  margin-bottom: 15px;
   background: #f8f9fa;
-  border-radius: 12px;
   border-left: 4px solid #007bff;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .passageiro-item:last-child {
@@ -438,16 +438,24 @@ body {
 }
 
 .passageiro-nome {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 22px;
+  font-weight: 700;
   color: #1e3a5f;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  line-height: 1.2;
+  word-break: break-word; /* Quebra nomes longos */
 }
 
 .passageiro-info {
   font-size: 15px;
-  color: #667;
+  color: #444;
   margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.passageiro-info strong {
+  font-weight: 700;
+  color: #1e3a5f;
 }
 
 .grupo-acoes {
@@ -656,7 +664,7 @@ body {
 /*LINHA 2: Nome da pessoa - destaque grande*/
 .viagem-nome {
   font-family: 'Century', 'Impact', sans-serif;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 900;
   color: #1e3a5f;
   margin-bottom: 10px;
@@ -787,6 +795,41 @@ body {
   line-height: 1.6;
   margin: 0 0 25px 0;
   padding: 0;
+}
+
+.btn-acao {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-acao:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-acao:active {
+  transform: translateY(0);
+}
+
+.btn-editar {
+  background: linear-gradient(135deg, #007bff 90%, #0056b3 10%);
+}
+
+.btn-cancelar {
+  background: linear-gradient(135deg, #dc3545 90%, #c82333 10%);
+}
+
+.btn-realizada {
+  background: linear-gradient(135deg, #28a745 90%, #218838 10%);
 }
 
 .btn-alerta-ok-unico {
