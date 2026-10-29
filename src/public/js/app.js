@@ -536,7 +536,7 @@ function getBadgeStatus(status) {
       font-size: 12px; 
       font-weight: 700;
       letter-spacing: 1px;
-      display: incline-flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       border: 2px solid rgba(255,255,255,0.3);

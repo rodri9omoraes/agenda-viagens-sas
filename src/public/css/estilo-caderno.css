@@ -1002,7 +1002,7 @@ body {
   margin-left: auto;
 }
 
-.navegacao-data input [type="date"] {
+.navegacao-data input[type="date"] {
   padding: 10px 14px;
   font-size: 15px;
   border: 2px solid #dee2e6;
