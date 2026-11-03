@@ -213,6 +213,42 @@ function renderizarViagensAgrupadas(viagens) {
   }).join('');
 }
 
+// Agrupa viagens únicas para contagem nos relatórios
+// Considera: cidade + local + horário de saída + data como 1 viagem
+function agruparViagensUnicas(viagens) {
+  const gruposUnicos = {};
+
+  viagens.forEach(v => {
+    // Chave única: data + destino + horário de saída
+    const chave = `${v.data_viagem}|${v.cidade_destino}|${v.horario_saida || 'sem-horario'}`;
+
+    if (!gruposUnicos[chave]) {
+      gruposUnicos[chave] = {
+        data: v.data_viagem,
+        cidade: v.cidade_destino,
+        horarioSaida: v.horario_saida,
+        motorista: v.nome_motorista,
+        status: v.status,
+        passageiros: []
+      };
+    }
+
+    gruposUnicos[chave].passageiros.push(v);
+  });
+
+  return Object.values(gruposUnicos);
+}
+
+// Determina o status "final" do grupo único
+function getStatusFinalGrupo(grupo) {
+  const total = grupo.passageiros.length;
+  const realizadas = grupo.passageiros.filter(p => p.status === 'realizada').length;
+  const canceladas = grupo.passageiros.filter(p => p.status === 'cancelada').length;
+
+  if (realizadas >= 1) return 'realizada';
+  if (canceladas === total) return 'cancelada';
+  return 'agendada';
+}
 
 // ====================================================================================
 // VIAGENS
@@ -1034,9 +1070,13 @@ async function atualizarRelatorios() {
     
     console.log('Viagens do ano:', viagensAno.length);
     
+    // Agrupa viagens únicas
+    const viagensUnicas = agruparViagensUnicas(viagensAno);
+    console.log('Viagens únicas (grupos):', viagensUnicas.length);
+
     // Conta viagens realizadas e pendentes
-    const realizadas = viagensAno.filter(v => v.status === 'realizada').length;
-    const pendentes = viagensAno.filter(v => v.status === 'agendada').length;
+    const realizadas = viagensUnicas.filter(v => getStatusFinalGrupo(v) === 'realizada').length;
+    const pendentes = viagensUnicas.filter(v => getStatusFinalGrupo(v) === 'agendada').length;
     
     // Atualiza cards
     const elRealizadas = document.getElementById('total-realizadas');
@@ -1052,13 +1092,13 @@ async function atualizarRelatorios() {
     const canvasDestinos = document.getElementById('grafico-destinos');
     
     if (canvasMotoristas) {
-      gerarGraficoMotoristas(viagensAno);
+      gerarGraficoMotoristas(viagensUnicas);
     } else {
       console.warn('Canvas de motoristas não encontrado');
     }
     
     if (canvasDestinos) {
-      gerarGraficoDestinos(viagensAno);
+      gerarGraficoDestinos(viagensUnicas);
     } else {
       console.warn('Canvas de destinos não encontrado');
     }
@@ -1072,7 +1112,7 @@ async function atualizarRelatorios() {
 }
 
 // Gráfico de Viagens por Motorista
-function gerarGraficoMotoristas(viagens) {
+function gerarGraficoMotoristas(viagensUnicas) {
   const canvas = document.getElementById('grafico-motoristas');
   if (!canvas) return;
   
@@ -1080,9 +1120,9 @@ function gerarGraficoMotoristas(viagens) {
   
   // Conta viagens por motorista
   const contagem = {};
-  viagens.forEach(v => {
-    if (v.nome_motorista) {
-      contagem[v.nome_motorista] = (contagem[v.nome_motorista] || 0) + 1;
+  viagensUnicas.forEach(v => {
+    if (v.motorista) {
+      contagem[v.motorista] = (contagem[v.motorista] || 0) + 1;
     }
   });
   
@@ -1131,7 +1171,7 @@ function gerarGraficoMotoristas(viagens) {
 }
 
 // Gráfico de Viagens por Destino
-function gerarGraficoDestinos(viagens) {
+function gerarGraficoDestinos(viagensUnicas) {
   const canvas = document.getElementById('grafico-destinos');
   if (!canvas) return;
   
@@ -1139,8 +1179,8 @@ function gerarGraficoDestinos(viagens) {
   
   // Conta viagens por destino (cidade + local)
   const contagem = {};
-  viagens.forEach(v => {
-    const destino = `${v.cidade_destino || ''} - ${v.local_destino || ''}`.trim();
+  viagensUnicas.forEach(v => {
+    const destino = `${v.cidade || ''} - ${v.local || ''}`.trim();
     if (destino && destino !== '-') {
       contagem[destino] = (contagem[destino] || 0) + 1;
     }
