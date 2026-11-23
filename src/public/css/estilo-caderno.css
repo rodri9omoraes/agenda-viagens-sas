@@ -672,6 +672,7 @@ body {
   border-bottom: 2px dashed #dee2e6;
   /*text-transform: uppercase;*/
   letter-spacing: 0.5px;
+  line-height: 1.1; /* reduz espaço entre linhas quando quebra */
 }
 
 /* LINHA 1: Destino + Cidade + Horário (Verde, negrito)*/

@@ -325,9 +325,9 @@ async function carregarViagensDia() {
       // Monta os cards dos passageiros dentro deste grupo
       const passageirosHTML = grupo.passageiros.map((p) => `
         <div class="viagem-item">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div class="viagem-nome">${p.nome_pessoa}</div>
-            ${getBadgeStatus(p.status)}
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
+            <div class="viagem-nome" style="flex: 1;">${p.nome_pessoa}</div>
+            <div style="flex-shrink: 0;">${getBadgeStatus(p.status)}</div>
           </div>
 
           ${p.endereco ? `<div class="viagem-info"><strong>📌 Endereço:</strong> ${p.endereco}</div>` : ''}
@@ -482,28 +482,84 @@ async function editarViagem(id) {
   abrirModal(id);
 }
 
+// Abre um modal pedindo o nome do motorista que realizou a viagem
+function perguntarMotorista() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('modalMotorista');
+    const input = document.getElementById('input-motorista');
+    const btnConfirmar = document.getElementById('btn-confirmar-motorista');
+    const btnCancelar = document.getElementById('btn-cancelar-motorista');
+
+    input.value = '';
+    modal.style.display = 'block';
+
+    // Foca no campo
+    setTimeout(() => {
+      input.blur();
+      document.body.focus();
+      input.focus();
+    }, 150);
+
+    const confirmar = () => {
+      const valor = input.value.trim();
+      modal.style.display = 'none';
+      resolve(valor || null);
+    };
+
+    const cancelar = () => {
+      modal.style.display = 'none';
+      resolve(null);
+    };
+
+    // Remove listeners antigos para não acumular
+    btnConfirmar.onclick = confirmar;
+    btnCancelar.onclick = cancelar;
+
+    // Enter confimar, Esc cancela
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') confirmar();
+      if (e.key === 'Escape') cancelar();
+    };
+  });
+}
+
 // Muda o status da viagem (Agendada, Realizada ou Cancelada)
 async function mudarStatusViagem(id, novoStatus) {
   const mensagens = {
     'cancelada': 'Deseja marcar esta viagem como CANCELADA?',
     'realizada': 'Deseja marcar esta viagem como REALIZADA?'
   };
-  
-  const confirmou = await confirmar(mensagens[novoStatus]);
-  if (!confirmou) return;
-  
+    
   try {
     // Busca a viagem completa primeiro
     const viagemResponse = await fetch(`${API_URL}/viagens/${id}`);
     const viagem = await viagemResponse.json();
 
-    console.log(' Viagem antes:', viagem);
+    let motoristaInformado = null;
+
+    if (novoStatus === 'realizada') {
+      if (!viagem.nome_motorista || viagem.nome_motorista.trim() === '') {
+        motoristaInformado = await perguntarMotorista();
+        if (motoristaInformado === null) return;
+      }
+    }
 
     // Atualiza apenas o status, mantendo todos os outros campos
+    const confirmou = await confirmar(mensagens[novoStatus]);
+    if (!confirmou) return;
+    
     const dadosAtualizados = {
       ...viagem,
       status: novoStatus
     };
+
+    if (motoristaInformado) {
+      dadosAtualizados.nome_motorista = motoristaInformado;
+    }
+
+    if (novoStatus === 'cancelada') {
+      dadosAtualizados.nome_motorista = null;
+    }
 
     console.log('📤 Enviando:', dadosAtualizados);
 
@@ -550,9 +606,9 @@ function getBadgeStatus(status) {
   };
   
   const icones = {
-    'cancelada': '❌',
-    'agendada': '📅',
-    'realizada': '✅'
+    'cancelada': '✕',
+    'agendada': '◷',
+    'realizada': '✓'
   };
   
   const labels = {
