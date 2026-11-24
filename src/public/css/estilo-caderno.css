@@ -6,7 +6,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
+  background: #f5f0e1;
   min-height: 100vh;
   padding: 20px;
 }
@@ -15,7 +15,7 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: #f5f0e1;
 
   /*max-width: 1100px;
   margin: 0 auto;
@@ -25,83 +25,92 @@ body {
 }
 
 .cabecalho-caderno {
-  padding: 25px 50px !important;
+  padding: 28px 50px !important;
   min-height: 180px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #1e3a5f 80%, #2d5a87 20%);
-
-  /*position: relative;
+  background: linear-gradient(135deg, #4a6b3a 0%, #6b8f5e 50%, #8fb57e 100%);
+  box-shadow: 0 4px 18px rgba(74, 107, 58, 0.35);
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(90deg, #ccff00 0%, #8fb57e 50%, #d4b896 100%) 1;
+  position: relative;
   overflow: hidden;  
-  color: white;*/
+  /*color: white;*/
 }
 
 .cabecalho-caderno::before {
   content: '';
   position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 300px;
-  height: 300px;
-  background: rgba(255,255,255,0.05);
+  top: -60%;
+  right: -5%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
   border-radius: 50%;
+  pointer-events: none;
 }
 
 .cabecalho-caderno::after {
   content: '';
   position: absolute;
-  bottom: -30%;
-  left: 10%;
-  width: 200px;
-  height: 200px;
-  background: rgba(255,255,255,0.03);
+  bottom: -40%;
+  left: 5%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
   border-radius: 50%;
-}
-
-.cabecalho-caderno h1 {
-  font-size: 32px !important;
-  margin-bottom: 10px;
-
-  /*font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  z-index: 1;*/
-}
-
-.cabecalho-caderno .data {
-  font-size: 18px !important;
-  margin-bottom: 20px;
-
-  /*opacity: 0.9;
-  font-weight: 400;
-  position: relative;
-  z-index: 1;*/
+  pointer-events: none;
 }
 
 .cabecalho-esquerda {
   flex: 1;
+  position: relative;
+  z-index: 2;
 }
 
 .cabecalho-direita {
   display: flex;
   align-items: center;
-  /*justify-content: flex-end;*/
   padding-right: 5px;
+  position: relative;
+  z-index: 2;
+}
+
+.cabecalho-caderno h1 {
+  font-size: 32px !important;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cabecalho-caderno .data {
+  font-size: 18px !important;
+  font-weight: 500px;
+  color: rgba(255, 255, 255, 0.90);
+  margin-bottom: 20px;
+  display: inline-block;
+  padding: 4px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .logo-cabecalho {
   max-height: 160px;
   max-width: 290px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35));
   transition: transform 0.3s ease;
 }
 
 .logo-cabecalho:hover {
-  transform: scale(1.05);
+  transform: scale(1.05) rotate(-10deg);
 }
 
 /* Responsivo */
@@ -137,25 +146,28 @@ body {
 .btn-calendario {
   background: rgba(255,255,255,0.15);
   color: white;
-  border: 1px solid rgba(255,255,255,0.3);
-  padding: 12px 20px;
-  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.30);
+  padding: 12px 22px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  position: relative;
-  z-index: 1;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
 }
 
 .btn-calendario:hover {
-  background: rgba(255,255,255,0.25);
-  transform: translate(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255, 255, 255, 0.50);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.btn-calendario:active {
+  transform: translateY(0);
 }
 
 /* ============================================ */
@@ -166,8 +178,8 @@ body {
   gap: 15px;
   align-items: center;
   flex-wrap: wrap;
-  background: #f8f9fa;
-  border-bottom: 2px solid #e9ecef;
+  background: #e0d7c0;
+  border-bottom: 2px solid #e0d7c0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   justify-content: space-between;
 }
@@ -204,30 +216,30 @@ body {
 }
 
 .btn-primary {
-  background: #28a745;
+  background: linear-gradient(135deg, #4a6b3a 0%, #6b8f5e 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #218838;
+  background: linear-gradient(135deg, #3d5a30 0%, #5a7d4e 100%);
 }
 
 .btn-secondary {
-  background: #007bff;
+  background: linear-gradient(135deg, #5b8fb9 0%, #7ba8cc 100%);
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #0056b3;
+  background: linear-gradient(135deg, #4a7da8 0%, #6a98bc 100%);
 }
 
 .btn-imagem {
-  background: #6f42c1;
+  background: linear-gradient(135deg, #8b6fa3 0%, #a88bc0 100%);
   color: white;
 }
 
 .btn-imagem:hover {
-  background: #5a32a3;
+  background: linear-gradient(135deg, #7a5e92 0%, #977ab0 100%);
   transform: translate(-2px);
   box-shadow: 0 4px 12px rgba(111,66,193,0.3);
 }
@@ -261,21 +273,6 @@ body {
 /* ============================================ */
 /* LISTA DE VIAGENS */
 
-.cabecalho-caderno .btn-calendario {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.3);
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.cabecalho-caderno .btn-calendario:hover {
-  background: rgba(255,255,255,0.3);
-}
-
 #data-selecionada {
   padding: 10px 14px;
   border: 2px solid #dee2e6;
@@ -299,21 +296,21 @@ body {
 
 /* Cards Viagem na lista principal */
 .viagem-item {
-  background: white;
+  background: #fdfbf7;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 20px;
   border-left: 5px solid #28a745;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
   transition: all 0.2s ease;
-  border-top: 1px solid #f0f2f5;
-  border-right: 1px solid #f0f2f5;
-  border-bottom: 1px solid #f0f2f5;
+  border-top: 1px solid #efe8d6;
+  border-right: 1px solid #efe8d6;
+  border-bottom: 1px solid #efe8d6;
 }
 
 .viagem-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.10);
 }
 
 .viagem-item.cancelada {
@@ -375,7 +372,7 @@ body {
 .grupo-viagem {
   display: flex;
   flex-direction: column;
-  background: white;
+  background: #fdfbf7;
   border-radius: 16px;
   padding: 25px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
@@ -390,13 +387,13 @@ body {
 }
 
 .grupo-header {
-  background: linear-gradient(135deg, #e8f5e9 20%, #c8e6c9 80%);
+  background: linear-gradient(135deg, #e8f0e0 20%, #d4e4c8 80%);
   padding: 15px 20px;
   border-radius: 12px;
   margin-bottom: 10px;
   font-size: 16px;
   font-weight: bold;
-  color: #2e7d32;
+  color: #2e5a1e;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -414,7 +411,7 @@ body {
 .grupo-destino {
   font-size: 17px;
   font-weight: bold;
-  color: #2e7d32;
+  color: #2e5a1e;
 }
 
 .grupo-horario {
@@ -875,11 +872,11 @@ body {
 /* ============================================ */
 
 .abas-navegacao {
-  background: linear-gradient(135deg, #1e3a5f 90%, #2d5a87 10%);
+  background: linear-gradient(135deg, #4a6b3a 90%, #6b8f5e 10%);
   padding: 0 20px;
   display: flex;
   gap: 5px;
-  border-bottom: 3px solid #0f3460;
+  border-bottom: 3px solid #3d5a30;
 }
 
 .aba-btn {
@@ -900,8 +897,8 @@ body {
 }
 
 .aba-btn.ativa {
-  background: #fff;
-  color: #1e3a5f;
+  background: #fdfbf7;
+  color: #4a6b3a;
 }
 
 .aba-conteudo {
@@ -917,7 +914,7 @@ body {
 /* ============================================ */
 
 .cabecalho-relatorios {
-  background: linear-gradient(135deg, #1e3a5f 80%, #2d5a87 20%);
+  background: linear-gradient(135deg, #4a6b3a 80%, #6b8f5e 20%);
   color: white;
   padding: 30px 40px;
   display: flex;
