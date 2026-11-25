@@ -485,11 +485,11 @@ body {
 
 /* Modais (Viagem e férias) */
 .modal-content {
-  background: white;
+  background: #fdfbf7;
   border-radius: 16px; /* Cantos arredondados */
   padding: 40px;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.15); /* Sombra Suave */
-  border: none;
+  box-shadow: 0 15px 50px rgba(74,107,58,0.25); /* Sombra Suave */
+  border: 1px solid #e0d7c0;
   animation: slideDownAlert 0.3s ease-out; /* Animação Suave */
 
   margin: 3% auto;
@@ -503,12 +503,12 @@ body {
 }
 
 .modal-content h2 {
-  color: #1e3a5f;
+  color: #2e5a1e;
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 30px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #f0f2f5;  
+  border-bottom: 2px solid #e0d7c0;  
 }
 
 #lista-ferias > div {
@@ -535,8 +535,8 @@ body {
   padding: 14px 16px;
   font-size: 16px;
   color: #333;
-  background: #fafbfc;
-  border: 1px solid #e2e8f0;
+  background: #f5f0e1;
+  border: 1px solid #d4c9a8;
   border-radius: 10px; /* Cantos suavizados */
   transition: all 0.2s ease;
   font-family: inherit;  
@@ -547,13 +547,13 @@ body {
 .form-group select:focus {
   outline: none;
   background: #ffffff;
-  border-color: #007bff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1); /* Anel de foco suave */
+  border-color: #4a6b3a;
+  box-shadow: 0 0 0 4px rgba(74, 107, 58, 0.15); /* Anel de foco suave */
 }
 
 .form-group label {
   font-weight: 600;
-  color: #4a5568;
+  color: #4a6b3a;
   font-size: 14px;
   margin-bottom: 6px;
   display: block;
@@ -879,36 +879,62 @@ body {
   display: flex;
   gap: 5px;
   border-bottom: 3px solid #3d5a30;
+  position: relative;
+  z-index: 5;
 }
 
 .aba-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255,255,255,0.75);
   border: none;
-  padding: 15px 30px;
+  padding: 14px 32px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  border-radius: 8px 8px 0 0;
-  margin-top: 10px;
+  transition: all 0.3s ease;
+  border-radius: 10px 10px 0 0;
+  margin-top: 12px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  position: relative;
 }
 
 .aba-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transform: translateY(-2px);
 }
 
 .aba-btn.ativa {
   background: #fdfbf7;
   color: #4a6b3a;
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(0);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.aba-btn.ativa::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #fdfbf7;
 }
 
 .aba-conteudo {
   display: none;
+  animation: fadeInAba 0.3s ease;
 }
 
 .aba-conteudo.ativa {
   display: block;
+}
+
+@keyframes fadeInAba {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================ */
