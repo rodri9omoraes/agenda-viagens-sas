@@ -370,15 +370,15 @@ body {
 
 /* Grupo de viagem (quando há múltiplos passageiros */
 .grupo-viagem {
-  display: flex;
-  flex-direction: column;
   background: #fdfbf7;
   border-radius: 16px;
   padding: 25px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-  border-left: 5px solid #ccff00;
+  border-left: 2px solid #ccff00;
+  border-top: 4px solid #ccff00;
+  box-shadow: -6px 0 18px -6px rgba(204,255,0,0.35), 0 6px 20px rgba(0,0,0,0.08);
+
   transition: all 0.3s;
-  min-height: 280px;
+  
 }
 
 .grupo-viagem:hover {
