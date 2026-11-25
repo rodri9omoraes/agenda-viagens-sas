@@ -372,13 +372,14 @@ body {
 .grupo-viagem {
   background: #fdfbf7;
   border-radius: 16px;
-  padding: 25px;
+  padding: 28px 30px;
   border-left: 2px solid #ccff00;
   border-top: 4px solid #ccff00;
   box-shadow: -6px 0 18px -6px rgba(204,255,0,0.35), 0 6px 20px rgba(0,0,0,0.08);
-
+  display: flex;
+  flex-direction: column;
   transition: all 0.3s;
-  
+  min-height: 280px;
 }
 
 .grupo-viagem:hover {
@@ -387,14 +388,10 @@ body {
 }
 
 .grupo-header {
-  background: linear-gradient(135deg, #e8f0e0 0%, #d4e4c8 100%);
-  border-bottom: 1px solid rgba(74,107,58,0.1);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-  
-  /*background: linear-gradient(135deg, #e8f0e0 20%, #d4e4c8 80%);
-  padding: 15px 20px;
+  background: linear-gradient(135deg, #e8f0e0 20%, #d4e4c8 80%);
+  padding: 16px 22px;
   border-radius: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
   font-size: 16px;
   font-weight: bold;
   color: #2e5a1e;
@@ -402,7 +399,8 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: space-between;*/
+  justify-content: space-between;
+  box-shadow: inset 0 2px 4px rgba(74,107,58,0.1);
 }
 
 .grupo-header-esquerda {

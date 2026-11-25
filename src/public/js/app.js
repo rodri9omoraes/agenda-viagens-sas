@@ -204,7 +204,7 @@ function renderizarViagensAgrupadas(viagens) {
         <div class="grupo-header">
           🏙️ ${grupo.cidade} - ${grupo.local}
           ${grupo.horarioAtendimento ? `- ${grupo.horarioAtendimento}` : ''}
-          ${grupo.horarioSaida ? `<span style="margin-left: auto; background: #ccff00; padding: 4px 12px; border-radius: 8px; color: #000; font-size: 18px;">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
+          ${grupo.horarioSaida ? `<span style="background: #e6c27a; color: #5c4013; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">⚠️ Saída: ${grupo.horarioSaida}</span>` : ''}
         </div>
         ${grupo.motorista ? `<div style="margin-bottom: 15px; font-size: 14px; color: #665;">🚗 Motorista: <strong>${grupo.motorista}</strong></div>` : ''}
         ${passageirosHTML}
