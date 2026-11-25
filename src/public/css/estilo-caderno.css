@@ -387,7 +387,11 @@ body {
 }
 
 .grupo-header {
-  background: linear-gradient(135deg, #e8f0e0 20%, #d4e4c8 80%);
+  background: linear-gradient(135deg, #e8f0e0 0%, #d4e4c8 100%);
+  border-bottom: 1px solid rgba(74,107,58,0.1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+  
+  /*background: linear-gradient(135deg, #e8f0e0 20%, #d4e4c8 80%);
   padding: 15px 20px;
   border-radius: 12px;
   margin-bottom: 10px;
@@ -398,7 +402,7 @@ body {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: space-between;*/
 }
 
 .grupo-header-esquerda {
