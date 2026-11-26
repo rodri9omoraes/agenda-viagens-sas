@@ -699,7 +699,7 @@ function abrirModal(idViagem = null) {
   btnDeletar.id = 'btn-deletar-viagem';
   btnDeletar.type = 'button';
   btnDeletar.className = 'btn';
-  btnDeletar.style.cssText = 'background: #dc3545; color: white; margin-left: auto;';
+  btnDeletar.style.cssText = 'background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; margin-left: auto; border-radius: 8px; padding: 12px 24px; font-weight: 600; border: none; cursor: pointer;';
   btnDeletar.textContent = '🗑️ Deletar Permanentemente';
   btnDeletar.onclick = () => deletarViagem(idViagem);
   
@@ -966,7 +966,6 @@ function fecharModalAlerta() {
 
 // Gera um arquivo PNG com as viagens do dia selecionado
 async function gerarImagemDia() {
-  // Lê a data selecionada
   const data = pegarDataSelecionada();
   
   try {
@@ -974,10 +973,9 @@ async function gerarImagemDia() {
     const response = await fetch(`${API_URL}/viagens/data/${data}`);
     let viagens = await response.json();
 
-    // Filtra viagens canceladas (Não devem aparecerer na imagem)
+    // Filtra viagens canceladas (não devem aparecer na imagem)
     viagens = viagens.filter(v => v.status !== 'cancelada');
     
-    // Se não há viagens, avisa e para
     if (viagens.length === 0) {
       notificar('Não há viagens agendadas para este dia!', 'aviso');
       return;
@@ -986,64 +984,78 @@ async function gerarImagemDia() {
     // Escreve a data no cabeçalho da imagem
     document.getElementById('data-imagem').textContent = formatarDataBrasil(data);
     
-    // Preenche o conteúdo da imagem com os cartões (sem botões, sem aviso de férias)
+    // Preenche o conteúdo da imagem
     const conteudo = document.getElementById('conteudo-imagem');
-    // Layout igual ao da tela principal
-    conteudo.innerHTML = viagens.map(viagem => `
-      <div class="viagem-item ${viagem.status === 'cancelada' ? 'cancelada' : ''}" data-id="${viagem.id}">
-        <div class="viagem-destino-linha">
-          🏙️ ${viagem.cidade_destino} - ${viagem.local_destino} - ${formatarHora(viagem.horario_atendimento)}
-        </div>
-        <div class="viagem-nome">👤 ${viagem.nome_pessoa}</div>
-        ${viagem.endereco ? `<div class="viagem-info"><strong>📌 Endereço:</strong> ${viagem.endereco}</div>` : ''}
-        ${viagem.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${viagem.telefone1}${viagem.telefone2 ? ` | ${viagem.telefone2}` : ''}</div>` : ''}
-        ${viagem.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${viagem.observacoes}</div>` : ''}
-        ${viagem.horario_saida ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(viagem.horario_saida)}</div>` : ''}
-        ${viagem.nome_motorista ? `<div class="viagem-info"><strong>🚗 Motorista:</strong> ${viagem.nome_motorista}</div>` : ''}
-        ${viagem.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${viagem.quem_autorizou}</div>` : ''}
-      </div>
-    `).join('');
 
-    // Espera 300ms (3s) para o navegador terminar de desenhar antes de fotografar
+    // Agrupa as viagens (mesma lógica da tela principal)
+    const grupos = agruparViagens(viagens);
+
+    // Monta o HTML de cada grupo
+    const htmlGrupos = grupos.map(grupo => {
+      // Monta os passageiros deste grupo
+      const passageirosHTML = grupo.passageiros.map(p => `
+        <div class="viagem-item">
+          <div class="viagem-destino-linha">
+            🏙️ ${grupo.cidade} - ${grupo.local} - ${formatarHora(grupo.horario_atendimento)}
+          </div>
+
+          <div class="viagem-nome">👤 ${p.nome_pessoa}</div>
+
+          ${grupo.motorista ? `<div class="viagem-motorista"><strong>🚗 Motorista:</strong> ${grupo.motorista}</div>` : ''}
+          ${p.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${p.endereco}</div>` : ''}
+          ${p.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
+          ${p.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${p.observacoes}</div>` : ''}
+          
+          ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' 
+            ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(grupo.horarioSaida)}</div>` 
+            : ''}
+          
+          ${p.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${p.quem_autorizou}</div>` : ''}
+        </div>
+      `).join('');
+
+      return passageirosHTML;
+    }).join('');
+
+    // Coloca tudo na área da imagem
+    conteudo.innerHTML = htmlGrupos;
+
+    // Aguarda o navegador renderizar antes de "fotografar"
     await new Promise(resolve => setTimeout(resolve, 300));
 
-    // Confere se a biblioteca html2canvas (que tira a "foto") foi carregada
+    // Confere se a biblioteca html2canvas foi carregada
     if (typeof html2canvas === 'undefined') {
       notificar('❌ Biblioteca html2canvas não carregada.', 'erro');
       return;
     }
 
-    // Pega a área que será tranformada em imagem
+    // Pega a área que será transformada em imagem
     const elemento = document.getElementById('area-imagem-caderno');
     if (!elemento) {
       notificar('❌ Elemento de imagem não encontrado.', 'erro');
       return;
     }
 
-    // Tira o "print" da área (Scale 2 = o dobro da qualidade)
+    // Tira o "print" da área (Scale 2 = dobro da qualidade)
     const canvas = await html2canvas(elemento, {
       scale: 2,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#fdfbf7',  // Fundo cremoso (harmoniza com o app)
       logging: false,
       useCORS: true
     });
     
-    // Converter a foto para um endereço de imagem PNG
+    // Converte a foto para PNG
     const imagem = canvas.toDataURL('image/png');
-    // Cria um link invisível para baixar o arquivo
+    
+    // Cria link invisível para baixar
     const link = document.createElement('a');
-    // Nome do arquivo: viagens-20261014.png (removeos "-" da data)
     link.download = `viagens-${data.replace(/-/g, '')}.png`;
-    // Endereço do arquivo
     link.href = imagem;
-    // "Crica" no link para iniciar o download
     link.click();
     
-    // Avisa que deu certo
     notificar('Imagem gerada com sucesso!', 'sucesso');
     
   } catch (error) {
-    // Registra e mostra o erro
     console.error('Erro ao gerar imagem:', error);
     notificar('Erro ao gerar imagem: ' + error.message, 'erro');
   }
