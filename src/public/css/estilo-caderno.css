@@ -637,18 +637,19 @@ body {
   height: 3px;
 }
 
-.imagem-caderno .caderno-header h2 {
+/*.imagem-caderno .caderno-header h2 {
   font-size: 14px;
   font-weight: 600;
   color: #6b8f5e;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 2px;
-}
+}*/
 
 .imagem-caderno .caderno-header .data-caderno {
+  font-family: 'Century';
   font-size: 28px;
-  font-weight: 600;
+  font-weight: bold; /* ou 600*/
   color: #2e5a1e;
   font-style: italic;
   letter-spacing: 0.5px;
@@ -773,7 +774,7 @@ body {
   font-weight: 600;
   margin-bottom: 12px;
   padding: 8px 14px;
-  background: #f5f0e1;
+  /*background: #f5f0e1;*/
   border-radius: 8px;
   display: inline-block;
 }

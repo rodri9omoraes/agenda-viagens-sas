@@ -26,7 +26,7 @@ function formatarDataBrasil(dataISO) {
   // Cria um objeto de data (mês começa em 0 no JavaScript, por isso "mes - 1")
   const dataObj = new Date(ano, mes - 1, dia);
   // Monta o texto final usando as listas acima
-  return `${diasSemana[dataObj.getDay()]}, ${dia} de ${meses[parseInt(mes) - 1]} de ${ano}`;
+  return `${diasSemana[dataObj.getDay()]},<br>${dia} de ${meses[parseInt(mes) - 1]} de ${ano}`;
 }
 
 // Devolve a hora para exibir; se não houver, mosta "--:--", se houver devolve a própria hora
@@ -982,7 +982,7 @@ async function gerarImagemDia() {
     }
 
     // Escreve a data no cabeçalho da imagem
-    document.getElementById('data-imagem').textContent = formatarDataBrasil(data);
+    document.getElementById('data-imagem').innerHTML = formatarDataBrasil(data);
     
     // Preenche o conteúdo da imagem
     const conteudo = document.getElementById('conteudo-imagem');
@@ -1001,7 +1001,6 @@ async function gerarImagemDia() {
 
           <div class="viagem-nome">👤 ${p.nome_pessoa}</div>
 
-          ${grupo.motorista ? `<div class="viagem-motorista"><strong>🚗 Motorista:</strong> ${grupo.motorista}</div>` : ''}
           ${p.endereco ? `<div class="viagem-info"><strong>📍 Endereço:</strong> ${p.endereco}</div>` : ''}
           ${p.telefone1 ? `<div class="viagem-info"><strong>📞 Tel:</strong> ${p.telefone1}${p.telefone2 ? ` | ${p.telefone2}` : ''}</div>` : ''}
           ${p.observacoes ? `<div class="viagem-info"><strong>📝 Obs:</strong> ${p.observacoes}</div>` : ''}
@@ -1009,6 +1008,8 @@ async function gerarImagemDia() {
           ${grupo.horarioSaida && grupo.horarioSaida !== 'sem-horario' 
             ? `<div class="viagem-saida">⚠️ Saída: ${formatarHora(grupo.horarioSaida)}</div>` 
             : ''}
+          
+          ${grupo.motorista ? `<div class="viagem-motorista"><strong>🚗 Motorista:</strong> ${grupo.motorista}</div>` : ''}
           
           ${p.quem_autorizou ? `<div class="viagem-autorizado">Autorizado por: ${p.quem_autorizou}</div>` : ''}
         </div>
